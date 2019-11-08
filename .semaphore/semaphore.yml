@@ -1,45 +1,57 @@
+# TODO replace dockerhub with semaphore registry
+
 version: v1.0
-name: Addressbook
+name: semaphore-demo-cicd-kubernetes
 agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu1804
+
 blocks:
-  - name: Install dependencies
+  - name: Docker Build
     task:
-      env_vars:
-        - name: NODE_ENV
-          value: test
+
+      secrets:
+        - name: dockerhub
+
       prologue:
         commands:
           - checkout
-          - nvm use
+          - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+
       jobs:
-        - name: npm install and cache
+        - name: Docker Build
           commands:
-            - cache restore
-            - npm install
-            - cache store
+            - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:latest || true
+            - docker build --cache-from $DOCKER_USERNAME/seamphore-demo-cicd-kubernetes:latest -t $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID .
+            - docker push $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+
   - name: Tests
     task:
+
       env_vars:
         - name: NODE_ENV
           value: test
+      secrets:
+        - name: dockerhub
+
       prologue:
         commands:
-          - checkout
-          - nvm use
-          - cache restore
+            - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+            - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+
       jobs:
         - name: Static test
           commands:
-            - npm run lint
+            - docker run -it $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run lint
+
         - name: Unit test
           commands:
             - sem-service start postgres
-            - npm run test
+            - docker run --net=host -it $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run test
+
 promotions:
-  - name: Dockerize
-    pipeline_file: docker-build.yml
-    auto_promote_on:
-      - result: passed
+  - name: Canary Deployment
+    pipeline_file: deploy-canary.yml
+    auto_promote:
+      when: "result = 'passed' and (branch = 'master' or tag =~ '^hotfix*')"
