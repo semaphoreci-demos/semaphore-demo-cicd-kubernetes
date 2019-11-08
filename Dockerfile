@@ -5,6 +5,7 @@ ENV APP_HOME /app
 RUN mkdir $APP_HOME
 WORKDIR $APP_HOME
 
+COPY .nvmrc .jshintrc $APP_HOME/
 COPY package*.json $APP_HOME/
 RUN npm install
 

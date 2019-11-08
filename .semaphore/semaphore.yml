@@ -1,3 +1,5 @@
+# TODO replace dockerhub with semaphore registry
+
 version: v1.0
 name: semaphore-demo-cicd-kubernetes
 agent:
@@ -20,9 +22,9 @@ blocks:
       jobs:
         - name: Docker Build
           commands:
-            - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:latest
+            - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:latest || true
             - docker build --cache-from $DOCKER_USERNAME/seamphore-demo-cicd-kubernetes:latest -t $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-            - docker push $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:latest
+            - docker push $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
   - name: Tests
     task:
@@ -49,25 +51,25 @@ blocks:
             - docker exec -it $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run test
 
 
-  - name: Push to DockerHub
-    task:
+  # - name: Push to DockerHub
+  #   task:
 
-      secrets:
-        - name: dockerhub
+  #     secrets:
+  #       - name: dockerhub
 
-      prologue:
-        commands:
-          - checkout
-          - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+  #     prologue:
+  #       commands:
+  #         - checkout
+  #         - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
-      jobs:
-        - name: Docker Build
-          commands:
-            - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-            - docker push $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+  #     jobs:
+  #       - name: Docker Build
+  #         commands:
+  #           - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+  #           - docker push $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
-# promotions:
-#   - name: Dockerize
-#     pipeline_file: docker-build.yml
-#     auto_promote_on:
-#       - result: passed
+promotions:
+  - name: Canary Deployment
+    pipeline_file: docker-canary.yml
+    auto_promote_on:
+      - result: passed
