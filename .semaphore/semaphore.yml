@@ -8,12 +8,9 @@ agent:
 blocks:
   - name: Docker Build
     task:
-      env_vars:
-        - name: NODE_ENV
-          value: test
 
       secrets:
-        - dockerhub
+        - name: dockerhub
 
       prologue:
         commands:
@@ -33,7 +30,7 @@ blocks:
         - name: NODE_ENV
           value: test
       secrets:
-        - dockerhub
+        - name: dockerhub
 
       prologue:
         commands:
@@ -48,6 +45,22 @@ blocks:
           commands:
             - sem-service start postgres
             - docker exec -it $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run test
+
+  - name: Push to DockerHub
+    task:
+
+      secrets:
+        - name: dockerhub
+
+      prologue:
+        commands:
+          - checkout
+
+      jobs:
+        - name: Docker Build
+          commands:
+            - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+            - docker push $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
 # promotions:
 #   - name: Dockerize
