@@ -1,7 +1,7 @@
 {
-  "name": "addressbook",
+  "name": "semaphore-demo-cicd-kubernetes",
   "version": "1.0.0",
-  "description": "An addressbook database with API",
+  "description": "A Companion Demo for Semaphore CI/CD Docker and Kubernetes Book",
   "main": "src/app.js",
   "scripts": {
     "test": "jest src",
@@ -13,7 +13,7 @@
     "nodejs",
     "express"
   ],
-  "author": "Tommy F",
+  "author": "Tomma Fernandez",
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.19.0",
