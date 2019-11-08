@@ -24,6 +24,7 @@ agent:
   #           - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
   #           - docker push $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
+blocks:
   - name: Deploy to Kubernetes
     task:
       secrets:
