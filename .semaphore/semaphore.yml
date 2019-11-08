@@ -43,12 +43,12 @@ blocks:
       jobs:
         - name: Static test
           commands:
-            - docker exec -it $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run lint
+            - docker run -it $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run lint
 
         - name: Unit test
           commands:
             - sem-service start postgres
-            - docker exec -it $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run test
+            - docker run -it $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run test
 
 
   # - name: Push to DockerHub
@@ -72,4 +72,4 @@ promotions:
   - name: Canary Deployment
     pipeline_file: docker-canary.yml
     auto_promote_on:
-      - result: passed
+      when: "result = 'passed' and (branch = 'master' or tag =~ '^hotfix*')"
