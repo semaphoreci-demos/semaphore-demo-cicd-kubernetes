@@ -23,7 +23,7 @@ blocks:
         - name: Docker Build
           commands:
             - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:latest || true
-            - docker build --cache-from $DOCKER_USERNAME/seamphore-demo-cicd-kubernetes:latest -t $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+            - docker build --cache-from $DOCKER_USERNAME/seamphore-demo-cicd-kubernetes:latest -t $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID .
             - docker push $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
   - name: Tests
