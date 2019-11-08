@@ -24,7 +24,7 @@ agent:
             - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
             - docker push $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
-  # - name: Deploy to Kubernetes
+  # - name: Canary Deployment
   #   task:
   #     secrets:
   #       - name: do-access-token
@@ -32,7 +32,7 @@ agent:
   #       - name: dockerhub
   #     env_vars:
   #       - name: CLUSTER_NAME
-  #         value: addressbook-server
+  #         value: semaphore-demo-cicd-kubernetes-server
   #     prologue:
   #       commands:
   #         - wget https://github.com/digitalocean/doctl/releases/download/v1.20.0/doctl-1.20.0-linux-amd64.tar.gz
@@ -45,20 +45,9 @@ agent:
   #     - name: Deploy
   #       commands:
   #         - source $HOME/env-production
-  #         - envsubst < deployment.yml | tee deploy.yml
+  #         - envsubst < deploy-canary.yml | tee deploy.yml
   #         - kubectl apply -f deploy.yml
-  # - name: Tag latest release
-  #   task:
-  #     secrets:
-  #       - name: dockerhub
-  #     prologue:
-  #       commands:
-  #         - checkout
-  #         - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-  #         - checkout
-  #     jobs:
-  #     - name: docker tag latest
-  #       commands:
-  #         - docker pull "${DOCKER_USERNAME}/addressbook:$SEMAPHORE_WORKFLOW_ID" 
-  #         - docker tag "${DOCKER_USERNAME}/addressbook:$SEMAPHORE_WORKFLOW_ID" "${DOCKER_USERNAME}/addressbook:latest"
-  #         - docker push "${DOCKER_USERNAME}/addressbook:latest"
+
+promotions:
+  - name: Production Deployment
+    pipeline_file: deploy-prod.yml

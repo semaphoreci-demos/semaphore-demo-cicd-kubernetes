@@ -11,8 +11,6 @@ RUN npm install
 
 RUN mkdir ./src
 COPY src $APP_HOME/src/
-RUN ls -la 
-RUN ls -la src
 
 EXPOSE 3000
 CMD [ "npm", "run", "start" ]
