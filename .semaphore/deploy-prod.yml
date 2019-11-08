@@ -43,7 +43,7 @@ blocks:
           - doctl kubernetes cluster kubeconfig save "${CLUSTER_NAME}"
           - checkout
       jobs:
-      - name: Deploy
+      - name: Production Deploymen
         commands:
           - source $HOME/env-production
           - envsubst < deploy-prod.yml | tee deploy.yml

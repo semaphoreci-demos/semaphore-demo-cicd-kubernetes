@@ -19,7 +19,7 @@ blocks:
           - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
       jobs:
-        - name: Docker Build
+        - name: Docker Push
           commands:
             # TODO: pull from semaphore registry
             - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
