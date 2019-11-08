@@ -15,6 +15,7 @@ blocks:
       prologue:
         commands:
           - checkout
+          - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
       jobs:
         - name: Docker Build
@@ -34,6 +35,7 @@ blocks:
 
       prologue:
         commands:
+            - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
             - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
       jobs:
@@ -46,6 +48,7 @@ blocks:
             - sem-service start postgres
             - docker exec -it $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run test
 
+
   - name: Push to DockerHub
     task:
 
@@ -55,6 +58,7 @@ blocks:
       prologue:
         commands:
           - checkout
+          - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
       jobs:
         - name: Docker Build
