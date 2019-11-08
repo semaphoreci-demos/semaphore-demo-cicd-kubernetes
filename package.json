@@ -2,18 +2,18 @@
   "name": "addressbook",
   "version": "1.0.0",
   "description": "An addressbook database with API",
-  "main": "app.js",
+  "main": "src/app.js",
   "scripts": {
-    "test": "jest",
-    "start": "node app.js",
-    "lint": "jshint app.js database*.js migrate.js"
-    "migrate": "node migrate.js",
+    "test": "jest src",
+    "start": "node src/app.js",
+    "lint": "jshint src/*.js",
+    "migrate": "node src/migrate.js"
   },
   "keywords": [
     "nodejs",
     "express"
   ],
-  "author": "Sammy the Shark <sammy@example.com>",
+  "author": "Tommy F",
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.19.0",
