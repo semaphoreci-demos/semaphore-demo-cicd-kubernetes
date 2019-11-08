@@ -71,5 +71,5 @@ blocks:
 promotions:
   - name: Canary Deployment
     pipeline_file: docker-canary.yml
-    auto_promote_on:
+    auto_promote:
       when: "result = 'passed' and (branch = 'master' or tag =~ '^hotfix*')"
