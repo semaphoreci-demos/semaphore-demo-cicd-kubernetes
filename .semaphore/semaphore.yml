@@ -48,25 +48,7 @@ blocks:
         - name: Unit test
           commands:
             - sem-service start postgres
-            - docker run -it $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run test
-
-
-  # - name: Push to DockerHub
-  #   task:
-
-  #     secrets:
-  #       - name: dockerhub
-
-  #     prologue:
-  #       commands:
-  #         - checkout
-  #         - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-
-  #     jobs:
-  #       - name: Docker Build
-  #         commands:
-  #           - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-  #           - docker push $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+            - docker run --net=host -it $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run test
 
 promotions:
   - name: Canary Deployment
