@@ -3,6 +3,7 @@ var bodyParser = require('body-parser');
 var db = require('./database');
 var app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
+
 app.get("/person/:id", function(req, res) {
     db.Person.findByPk(req.params.id)
         .then( person => {
@@ -12,6 +13,7 @@ app.get("/person/:id", function(req, res) {
             res.status(500).send(JSON.stringify(err));
         });
 });
+
 app.put("/person", function(req, res) {
     db.Person.create({
         firstName: req.body.firstName,
@@ -25,6 +27,7 @@ app.put("/person", function(req, res) {
             res.status(500).send(JSON.stringify(err));
         });
 });
+
 app.delete("/person/:id", function(req, res) {
     db.Person.destroy({
         where: {
@@ -38,6 +41,7 @@ app.delete("/person/:id", function(req, res) {
             res.status(500).send(JSON.stringify(err));
         });
 });
+
 app.get("/all", function(req, res) {
     db.Person.findAll()
         .then( persons => {
@@ -47,9 +51,11 @@ app.get("/all", function(req, res) {
             res.status(500).send(JSON.stringify(err));
         });
 });
+
 app.use(function(req, res) {
-    res.status(404).send("404 - Not Found");
+    res.status(404).send("404 - Not Found. Try the /all route");
 });
+
 var server = app.listen(process.env.PORT || 3000, function() {
     console.log("app is running on port", server.address().port);
 });

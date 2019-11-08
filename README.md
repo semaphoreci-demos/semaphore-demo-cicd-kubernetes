@@ -19,13 +19,22 @@ Start test postgres and create database objects:
     npm run test
     npm run lint
 
-### Run
+### Start Locally (needs a db)
 
     npm run start
 
 or with nodemon
 
     npm run start:dev
+
+### Start Locally With Docker
+
+    docker-compose up --build
+
+### Use the API Locally
+
+    curl -w "\n" -X PUT -d "firstName=al&lastName=pacino" 127.0.0.1:3000/person
+    curl -w "\n" 127.0.0.1:3000/all
 
 ## DigitalOcean
 
