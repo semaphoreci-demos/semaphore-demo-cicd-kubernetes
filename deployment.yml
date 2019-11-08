@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: addressbook
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: addressbook
+  template:
+    metadata:
+      labels:
+        app: addressbook
+    spec:
+      containers:
+        - name: addressbook
+          image: ${DOCKER_USERNAME}/addressbook:${SEMAPHORE_WORKFLOW_ID}
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "$PORT"
+            - name: DB_SCHEMA
+              value: "$DB_SCHEMA"
+            - name: DB_USER
+              value: "$DB_USER"
+            - name: DB_PASSWORD
+              value: "$DB_PASSWORD"
+            - name: DB_HOST
+              value: "$DB_HOST"
+            - name: DB_PORT
+              value: "$DB_PORT"
+            - name: DB_SSL
+              value: "$DB_SSL"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: addressbook-lb
+spec:
+  selector:
+    app: addressbook
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 3000

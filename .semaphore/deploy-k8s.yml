@@ -1,0 +1,45 @@
+version: v1.0
+name: Deploy to Kubernetes
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+blocks:
+  - name: Deploy to Kubernetes
+    task:
+      secrets:
+        - name: do-access-token
+        - name: env-production
+        - name: dockerhub
+      env_vars:
+        - name: CLUSTER_NAME
+          value: addressbook-server
+      prologue:
+        commands:
+          - wget https://github.com/digitalocean/doctl/releases/download/v1.20.0/doctl-1.20.0-linux-amd64.tar.gz
+          - tar xf doctl-1.20.0-linux-amd64.tar.gz 
+          - sudo cp doctl /usr/local/bin
+          - doctl auth init --access-token $DO_ACCESS_TOKEN
+          - doctl kubernetes cluster kubeconfig save "${CLUSTER_NAME}"
+          - checkout
+      jobs:
+      - name: Deploy
+        commands:
+          - source $HOME/env-production
+          - envsubst < deployment.yml | tee deploy.yml
+          - kubectl apply -f deploy.yml
+  - name: Tag latest release
+    task:
+      secrets:
+        - name: dockerhub
+      prologue:
+        commands:
+          - checkout
+          - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+          - checkout
+      jobs:
+      - name: docker tag latest
+        commands:
+          - docker pull "${DOCKER_USERNAME}/addressbook:$SEMAPHORE_WORKFLOW_ID" 
+          - docker tag "${DOCKER_USERNAME}/addressbook:$SEMAPHORE_WORKFLOW_ID" "${DOCKER_USERNAME}/addressbook:latest"
+          - docker push "${DOCKER_USERNAME}/addressbook:latest"
