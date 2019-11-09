@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: semaphore-demo-cicd-kubernetes
+  name: semaphore-demo-cicd-kubernetes-$TRACK
 spec:
-  replicas: 1
+  replicas: $REPLICAS
   selector:
     matchLabels:
       app: semaphore-demo-cicd-kubernetes

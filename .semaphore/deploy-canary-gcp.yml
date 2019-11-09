@@ -65,15 +65,25 @@ blocks:
 
           - IMAGE="gcr.io/$GCP_PROJECT_ID/semaphore-demo-nodejs-k8s-server"
 
+          - REPLICAS=2
+          - TRACK=stable
+          - cat deployment.yml | envsubst | tee deploy.yml
+          - kubectl apply -f deploy.yml
+
+          - REPLICAS=1
+          - TRACK=canary
+          - cat deployment.yml | envsubst | tee deploy.yml
+          - kubectl apply -f deploy.yml
+
           # Our deployment.yml instructs Kubernetes to pull container image
           # named semaphoredemos/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
           # envsubst is a tool which will replace $SEMAPHORE_WORKFLOW_ID with
           # its current value. The same variable was used in server-docker-build.yml
           # pipeline to tag and push a container image.
-          - cat deployment.yml | envsubst | tee deploy.yml
+          # - cat deployment.yml | envsubst | tee deploy.yml
 
-          # Perform declarative deployment:
-          - kubectl apply -f deploy.yml
+          # # Perform declarative deployment:
+          # - kubectl apply -f deploy.yml
 
         
   - name: Functional test
