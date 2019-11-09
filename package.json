@@ -7,6 +7,7 @@
     "test": "jest src",
     "start": "node src/app.js",
     "lint": "jshint src/*.js",
+    "ping": "node src/ping.js",
     "migrate": "node src/migrate.js"
   },
   "keywords": [

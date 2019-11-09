@@ -45,10 +45,15 @@ blocks:
           commands:
             - docker run -it $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run lint
 
-        - name: Unit test
+        - name: Integration test
           commands:
             - sem-service start postgres
             - docker run --net=host -it $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run test
+
+        - name: Functional test
+          commands:
+            - sem-service start postgres
+            - docker run --net=host -it $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run ping
 
 promotions:
   - name: Canary Deployment
