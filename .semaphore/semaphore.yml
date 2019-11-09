@@ -28,7 +28,6 @@ blocks:
 
   - name: Tests
     task:
-
       env_vars:
         - name: NODE_ENV
           value: test
@@ -57,6 +56,6 @@ blocks:
 
 promotions:
   - name: Canary Deployment
-    pipeline_file: deploy-canary.yml
+    pipeline_file: deploy-canary-gcp.yml
     auto_promote:
       when: "result = 'passed' and (branch = 'master' or tag =~ '^hotfix*')"

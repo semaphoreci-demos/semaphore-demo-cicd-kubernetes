@@ -7,10 +7,10 @@ agent:
 
 blocks:
 
-  - name: Push to Google Registry
+  - name: Push to Cloud Registry
     task:
       secrets:
-        - name: gcr-secret
+        - name: gcp-key
         - name: dockerhub
       jobs:
       - name: Docker Push
@@ -20,7 +20,7 @@ blocks:
 
           # Lets configure gcloud to push docker image into container registry
           # Authenticate using the file injected from the secret
-          - gcloud auth activate-service-account --key-file=.secrets.gcp.json
+          - gcloud auth activate-service-account --key-file=gcp-key.json
           - gcloud auth configure-docker -q
           - gcloud config set project $GCP_PROJECT_ID
           - gcloud config set compute/zone $GCP_PROJECT_DEFAULT_ZONE
@@ -34,18 +34,20 @@ blocks:
       # For info on creating secrets, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
-        - name: gcr-secret
+        - name: gcp-key
 
       # Set environment variables that your project requires.
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
+        - name: TRACK
+          value: canary
 
       prologue:
         commands:
           # Authenticate using the file injected from the secret
-          - gcloud auth activate-service-account --key-file=.secrets.gcp.json
+          - gcloud auth activate-service-account --key-file=gcp-key.json
 
           # Don't forget -q to silence confirmation prompts
           - gcloud auth configure-docker -q
@@ -61,26 +63,63 @@ blocks:
           - kubectl get nodes
           - kubectl get pods
 
+          - IMAGE="gcr.io/$GCP_PROJECT_ID/semaphore-demo-nodejs-k8s-server"
+
           # Our deployment.yml instructs Kubernetes to pull container image
           # named semaphoredemos/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
           # envsubst is a tool which will replace $SEMAPHORE_WORKFLOW_ID with
           # its current value. The same variable was used in server-docker-build.yml
           # pipeline to tag and push a container image.
-          - cat deploy-canary.yml | envsubst | tee deploy.yml
+          - cat deployment.yml | envsubst | tee deploy.yml
 
           # Perform declarative deployment:
           - kubectl apply -f deploy.yml
+
+        
+  - name: Functional test
+    task:
+      # For info on creating secrets, see:
+      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
+      secrets:
+        - name: gcp-key
+
+      # Set environment variables that your project requires.
+      # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
+      env_vars:
+        - name: CLUSTER_NAME
+          value: semaphore-demo-cicd-kubernetes
+
+      prologue:
+        commands:
+          # Authenticate using the file injected from the secret
+          - gcloud auth activate-service-account --key-file=gcp-key.json
+
+          # Don't forget -q to silence confirmation prompts
+          - gcloud auth configure-docker -q
+          - gcloud config set project $GCP_PROJECT_ID
+          - gcloud config set compute/zone $GCP_PROJECT_DEFAULT_ZONE
+
+          # Get kubectl config file
+          - gcloud container clusters get-credentials $CLUSTER_NAME --zone $GCP_PROJECT_DEFAULT_ZONE --project $GCP_PROJECT_ID
+          - checkout
+      jobs:
+
+      - name: Test
+        commands:
+          - sleep 20
+          - CANARY_POD=$(kubectl get pod -l track=canary -o name)
+          - kubectl exec -it $CANARY_POD -- npm run ping
 
   # If deployment to production succeeded, let's create a new version of
   # our `latest` Docker image.
   - name: Tag latest release
     task:
       secrets:
-        - name: gcr-secret
+        - name: gcp-key
       prologue:
         commands:
           # Authenticate using the file injected from the secret
-          - gcloud auth activate-service-account --key-file=.secrets.gcp.json
+          - gcloud auth activate-service-account --key-file=gcp-key.json
 
           # Don't forget -q to silence confirmation prompts
           - gcloud auth configure-docker -q

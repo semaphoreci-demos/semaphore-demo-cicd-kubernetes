@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: addressbook
+  name: semaphore-demo-cicd-kubernetes
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: addressbook
+      app: semaphore-demo-cicd-kubernetes
   template:
     metadata:
       labels:
-        app: addressbook
+        app: semaphore-demo-cicd-kubernetes
     spec:
       containers:
-        - name: addressbook
-          image: ${DOCKER_USERNAME}/addressbook:${SEMAPHORE_WORKFLOW_ID}
+        - name: semaphore-demo-cicd-kubernetes
+          image: ${DOCKER_USERNAME}/semaphore-demo-cicd-kubernetes:${SEMAPHORE_WORKFLOW_ID}
           env:
             - name: NODE_ENV
               value: "production"
@@ -38,10 +38,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: addressbook-lb
+  name: semaphore-demo-cicd-kubernetes-lb
 spec:
   selector:
-    app: addressbook
+    app: semaphore-demo-cicd-kubernetes
   type: LoadBalancer
   ports:
     - port: 80

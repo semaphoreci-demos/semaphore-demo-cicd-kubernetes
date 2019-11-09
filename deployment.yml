@@ -16,12 +16,11 @@ spec:
     metadata:
       labels:
         app: semaphore-demo-cicd-kubernetes
-        track: canary
+        track: $TRACK
     spec:
       containers:
       - name: semaphore-demo-cicd-kubernetes
-        image: gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-        # image: ${DOCKER_USERNAME}/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+        image: $IMAGE:$SEMAPHORE_WORKFLOW_ID
         env:
           - name: NODE_ENV
             value: "production"
