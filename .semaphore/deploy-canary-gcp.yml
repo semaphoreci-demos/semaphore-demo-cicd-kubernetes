@@ -142,3 +142,7 @@ blocks:
           - docker pull "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
           - docker tag "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID" "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:latest"
           - docker push "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:latest"
+
+promotions:
+  - name: Stable Deployment
+    pipeline_file: deploy-stable-gcp.yml
