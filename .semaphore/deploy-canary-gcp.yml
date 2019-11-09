@@ -74,17 +74,17 @@ blocks:
           - kubectl get pods
 
           - export IMAGE="gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes"
-          - echo $IMAGE
 
-          - REPLICAS=2
-          - TRACK=stable
+          - export REPLICAS=1
+          - export TRACK=canary
           - cat deployment.yml | envsubst | tee deploy.yml
           - kubectl apply -f deploy.yml
 
-          - REPLICAS=1
-          - TRACK=canary
+          - export REPLICAS=2
+          - export TRACK=stable
           - cat deployment.yml | envsubst | tee deploy.yml
           - kubectl apply -f deploy.yml
+
 
           # Our deployment.yml instructs Kubernetes to pull container image
           # named semaphoredemos/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID

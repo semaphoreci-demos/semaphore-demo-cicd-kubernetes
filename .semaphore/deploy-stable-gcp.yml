@@ -46,16 +46,18 @@ blocks:
           - kubectl get pods
 
           - export IMAGE="gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes"
+
+          - REPLICAS=3
+          - TRACK=stable
+          - cat deployment.yml | envsubst | tee deploy.yml
+          - kubectl apply -f deploy.yml
+
           # - kubectl delete deployment semaphore-demo-cicd-kubernetes-canary
           - REPLICAS=0
           - TRACK=canary
           - cat deployment.yml | envsubst | tee deploy.yml
           - kubectl apply -f deploy.yml
 
-          - REPLICAS=3
-          - TRACK=stable
-          - cat deployment.yml | envsubst | tee deploy.yml
-          - kubectl apply -f deploy.yml
 
           # Our deployment.yml instructs Kubernetes to pull container image
           # named semaphoredemos/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
