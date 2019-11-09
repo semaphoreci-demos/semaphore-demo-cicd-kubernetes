@@ -20,6 +20,10 @@ blocks:
       env_vars:
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
+        - name: GCP_PROJECT_ID: 
+          value: semaphore-demo-cicd-kubernetes
+        - name: GCP_PROJECT_DEFAULT_ZONE
+          value: us-central1-c
 
       prologue:
         commands:
@@ -43,7 +47,7 @@ blocks:
 
           - kubectl delete deployment semaphore-demo-cicd-canary
 
-          - IMAGE="gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes"
+          - export IMAGE="gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes"
           - REPLICAS=3
           - TRACK=stable
           - cat deployment.yml | envsubst | tee deploy.yml
@@ -72,6 +76,10 @@ blocks:
       env_vars:
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
+        - name: GCP_PROJECT_ID: 
+          value: semaphore-demo-cicd-kubernetes
+        - name: GCP_PROJECT_DEFAULT_ZONE
+          value: us-central1-c
 
       prologue:
         commands:
@@ -98,6 +106,11 @@ blocks:
   # our `latest` Docker image.
   - name: Tag latest release
     task:
+      env_vars:
+        - name: GCP_PROJECT_ID: 
+          value: semaphore-demo-cicd-kubernetes
+        - name: GCP_PROJECT_DEFAULT_ZONE
+          value: us-central1-c
       secrets:
         - name: gcp-key
       prologue:

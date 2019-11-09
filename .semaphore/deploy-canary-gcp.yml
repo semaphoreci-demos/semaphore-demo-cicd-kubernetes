@@ -9,6 +9,11 @@ blocks:
 
   - name: Push to Cloud Registry
     task:
+      env_vars:
+        - name: GCP_PROJECT_ID: 
+          value: semaphore-demo-cicd-kubernetes
+        - name: GCP_PROJECT_DEFAULT_ZONE
+          value: us-central1-c
       secrets:
         - name: gcp-key
         - name: dockerhub
@@ -40,6 +45,10 @@ blocks:
       # Set environment variables that your project requires.
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
+        - name: GCP_PROJECT_ID: 
+          value: semaphore-demo-cicd-kubernetes
+        - name: GCP_PROJECT_DEFAULT_ZONE
+          value: us-central1-c
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
         - name: TRACK
@@ -64,7 +73,8 @@ blocks:
           - kubectl get nodes
           - kubectl get pods
 
-          - IMAGE="gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes"
+          - export IMAGE="gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes"
+          - echo $IMAGE
 
           - REPLICAS=2
           - TRACK=stable
@@ -99,6 +109,10 @@ blocks:
       env_vars:
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
+        - name: GCP_PROJECT_ID: 
+          value: semaphore-demo-cicd-kubernetes
+        - name: GCP_PROJECT_DEFAULT_ZONE
+          value: us-central1-c
 
       prologue:
         commands:

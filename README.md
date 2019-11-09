@@ -44,13 +44,26 @@ Provision Services:
 
 ### Create secrets
 
-- dockerhub:
+For every platform
+
+- db-params
+    - DB_USER
+    - DB_PASSWORD
+    - DB_HOST
+
+For Google Cloud
+
+- gcp-key
+    - <json file>:/home/semaphore/gcp-key.json
+
+For DigitalOcean
+
+- dockerhub
   - DOCKER_USERNAME=YOUR_USERNAME
   - DOCKER_PASSWORD=YOUR_PASSWORD
+
 - do-access-token
   - DO_ACCESS_TOKEN=YOUR_DIGITALOCEAN_TOKEN
-- env-production
-  - environment file mapped to /home/semaphore/env-production
 
 
 
