@@ -13,6 +13,7 @@ blocks:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
         - name: gcp-key
+        - name: db-params
 
       # Set environment variables that your project requires.
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets

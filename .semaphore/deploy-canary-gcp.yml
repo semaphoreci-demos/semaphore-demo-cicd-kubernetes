@@ -35,6 +35,7 @@ blocks:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
         - name: gcp-key
+        - name: db-params
 
       # Set environment variables that your project requires.
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
@@ -119,29 +120,6 @@ blocks:
           - sleep 20
           - CANARY_POD=$(kubectl get pod -l track=canary -o name)
           - kubectl exec -it $CANARY_POD -- npm run ping
-
-  # If deployment to production succeeded, let's create a new version of
-  # our `latest` Docker image.
-  - name: Tag latest release
-    task:
-      secrets:
-        - name: gcp-key
-      prologue:
-        commands:
-          # Authenticate using the file injected from the secret
-          - gcloud auth activate-service-account --key-file=gcp-key.json
-
-          # Don't forget -q to silence confirmation prompts
-          - gcloud auth configure-docker -q
-          - gcloud config set project $GCP_PROJECT_ID
-          - gcloud config set compute/zone $GCP_PROJECT_DEFAULT_ZONE
-          - checkout
-      jobs:
-      - name: docker tag latest
-        commands:
-          - docker pull "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
-          - docker tag "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID" "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:latest"
-          - docker push "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:latest"
 
 promotions:
   - name: Stable Deployment
