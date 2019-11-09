@@ -20,7 +20,7 @@ blocks:
       env_vars:
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
-        - name: GCP_PROJECT_ID: 
+        - name: GCP_PROJECT_ID
           value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_DEFAULT_ZONE
           value: us-central1-c
@@ -76,7 +76,7 @@ blocks:
       env_vars:
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
-        - name: GCP_PROJECT_ID: 
+        - name: GCP_PROJECT_ID
           value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_DEFAULT_ZONE
           value: us-central1-c
@@ -107,7 +107,7 @@ blocks:
   - name: Tag latest release
     task:
       env_vars:
-        - name: GCP_PROJECT_ID: 
+        - name: GCP_PROJECT_ID
           value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_DEFAULT_ZONE
           value: us-central1-c
