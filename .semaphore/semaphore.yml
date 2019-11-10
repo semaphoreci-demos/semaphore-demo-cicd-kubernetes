@@ -51,12 +51,13 @@ blocks:
 
   - name: Push as latest
     task:
-      prologue:
-        commands:
-          - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
-          - docker pull semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-          - docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:latest
-          - docker push $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:latest
+      jobs:
+        - name: Push
+          commands:
+            - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
+            - docker pull semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+            - docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:latest
+            - docker push $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:latest
 
 promotions:
   - name: Canary Deployment
