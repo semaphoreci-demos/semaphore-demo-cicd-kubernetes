@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: semaphore-demo-cicd-kubernetes-$TRACK
+spec:
+  replicas: $REPLICAS
+  selector:
+    matchLabels:
+      app: semaphore-demo-cicd-kubernetes
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: semaphore-demo-cicd-kubernetes
+        track: $TRACK
+    spec:
+      containers:
+      - name: semaphore-demo-cicd-kubernetes
+        image: $IMAGE:$SEMAPHORE_WORKFLOW_ID
+        env:
+          - name: NODE_ENV
+            value: "production"
+          - name: PORT
+            value: "$PORT"
+          - name: DB_SCHEMA
+            value: "$DB_SCHEMA"
+          - name: DB_USER
+            value: "$DB_USER"
+          - name: DB_PASSWORD
+            value: "$DB_PASSWORD"
+          - name: DB_HOST
+            value: "$DB_HOST"
+          - name: DB_PORT
+            value: "$DB_PORT"
+          - name: DB_SSL
+            value: "$DB_SSL"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: semaphore-demo-cicd-kubernetes-lb
+spec:
+  selector:
+    app: semaphore-demo-cicd-kubernetes
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 3000

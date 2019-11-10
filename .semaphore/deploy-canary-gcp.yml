@@ -51,8 +51,8 @@ blocks:
           value: us-central1-c
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
-        - name: TRACK
-          value: canary
+        # - name: TRACK
+        #   value: canary
 
       prologue:
         commands:
@@ -73,17 +73,18 @@ blocks:
           - kubectl get nodes
           - kubectl get pods
 
-          - export IMAGE="gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes"
+          - ./apply.sh addressbook-canary 1 gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
-          - export REPLICAS=1
-          - export TRACK=canary
-          - cat deployment.yml | envsubst | tee deploy.yml
-          - kubectl apply -f deploy.yml
+          # - export IMAGE="gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes"
+          # - export REPLICAS=1
+          # - export TRACK=canary
+          # - cat deployment.yml | envsubst | tee deploy.yml
+          # - kubectl apply -f deploy.yml
 
-          - export REPLICAS=2
-          - export TRACK=stable
-          - cat deployment.yml | envsubst | tee deploy.yml
-          - kubectl apply -f deploy.yml
+          # - export REPLICAS=2
+          # - export TRACK=stable
+          # - cat deployment.yml | envsubst | tee deploy.yml
+          # - kubectl apply -f deploy.yml
 
 
           # Our deployment.yml instructs Kubernetes to pull container image
@@ -131,10 +132,9 @@ blocks:
 
       - name: Test
         commands:
-          - sleep 20
-          - CANARY_POD=$(kubectl get pod -l track=canary -o name)
-          - kubectl exec -it $CANARY_POD -- npm run ping
+          # - sleep 20
+          - kubectl exec -it $CANARY_POD $(kubectl get pod -l addressbook-canary -o name) -- npm run ping
 
-promotions:
-  - name: Stable Deployment
-    pipeline_file: deploy-stable-gcp.yml
+# promotions:
+#   - name: Stable Deployment
+#     pipeline_file: deploy-stable-gcp.yml
