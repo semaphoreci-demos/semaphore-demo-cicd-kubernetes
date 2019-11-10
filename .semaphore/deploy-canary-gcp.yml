@@ -16,12 +16,15 @@ blocks:
           value: us-central1-c
       secrets:
         - name: gcp-key
-        - name: dockerhub
+        # - name: dockerhub
       jobs:
       - name: Push
         commands:
-          - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-          - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+          # Pull image from private registry
+          - docker pull semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+
+          # - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+          # - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
           # Lets configure gcloud to push docker image into container registry
           # Authenticate using the file injected from the secret
@@ -30,8 +33,9 @@ blocks:
           - gcloud config set project $GCP_PROJECT_ID
           - gcloud config set compute/zone $GCP_PROJECT_DEFAULT_ZONE
 
-          - docker tag ${DOCKER_USERNAME}/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
-
+          # Upload image to cloud registry
+          # - docker tag ${DOCKER_USERNAME}/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
+          - docker tag semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
           - docker push "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
 
   - name: Canary Deployment
