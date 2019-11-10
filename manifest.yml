@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: semaphore-demo-cicd-kubernetes-$TRACK
+  name: $name
 spec:
-  replicas: $REPLICAS
+  replicas: $replicas
   selector:
     matchLabels:
       app: semaphore-demo-cicd-kubernetes
@@ -16,11 +16,10 @@ spec:
     metadata:
       labels:
         app: semaphore-demo-cicd-kubernetes
-        track: $TRACK
     spec:
       containers:
       - name: semaphore-demo-cicd-kubernetes
-        image: $IMAGE:$SEMAPHORE_WORKFLOW_ID
+        image: $image
         env:
           - name: NODE_ENV
             value: "production"
