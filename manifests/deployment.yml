@@ -7,7 +7,6 @@ spec:
   selector:
     matchLabels:
       app: addressbook
-      deployment: $deployment
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -17,6 +16,7 @@ spec:
     metadata:
       labels:
         app: addressbook
+        deployment: $deployment
     spec:
       containers:
       - name: addressbook
