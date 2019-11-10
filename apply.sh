@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 # apply a kubernetes manifest
 
-deployment=$1
-replicas=$2
-image=$3
-tag=$4
+export deployment=$1
+export replicas=$2
+export img=$3
 
 manifest=$(mktemp)
-cat manifest.yml | envsubst | tee $manifest
+cat manifests/deployment.yml | envsubst | tee $manifest
 kubectl apply -f $manifest
+kubectl rollout status -f $manifest
+rollout=$?
+rm -f $manifest
+exit $?

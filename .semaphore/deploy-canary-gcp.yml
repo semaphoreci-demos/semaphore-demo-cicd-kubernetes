@@ -73,7 +73,12 @@ blocks:
           - kubectl get nodes
           - kubectl get pods
 
-          - ./apply.sh addressbook-canary 1 gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+          # create the load balancer
+          - kubectl apply -f manifests/service.yml
+          # create the canary
+          - ./apply.sh addressbook-canary 1 "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
+          # scale back stable if exists
+          - if kubectl get deployment addressbook-stable; then kubectl scale --replicas=2 deployment/addressbook-stable; fi
 
           # - export IMAGE="gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes"
           # - export REPLICAS=1
@@ -133,6 +138,7 @@ blocks:
       - name: Test
         commands:
           # - sleep 20
+          # test script in the pod
           - kubectl exec -it $CANARY_POD $(kubectl get pod -l addressbook-canary -o name) -- npm run ping
 
 # promotions:

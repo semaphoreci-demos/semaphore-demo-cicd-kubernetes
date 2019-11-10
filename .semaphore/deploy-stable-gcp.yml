@@ -45,18 +45,24 @@ blocks:
           - kubectl get nodes
           - kubectl get pods
 
-          - export IMAGE="gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes"
+          # create or scale stable
+          - ./apply.sh addressbook-stable 3 "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
 
-          - REPLICAS=3
-          - TRACK=stable
-          - cat deployment.yml | envsubst | tee deploy.yml
-          - kubectl apply -f deploy.yml
+          # delete the canary
+          - if kubectl get deployment addressbook-canary; then kubectl delete deployment/addressbook-canary; fi
 
-          # - kubectl delete deployment semaphore-demo-cicd-kubernetes-canary
-          - REPLICAS=0
-          - TRACK=canary
-          - cat deployment.yml | envsubst | tee deploy.yml
-          - kubectl apply -f deploy.yml
+          # - export IMAGE="gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes"
+
+          # - REPLICAS=3
+          # - TRACK=stable
+          # - cat deployment.yml | envsubst | tee deploy.yml
+          # - kubectl apply -f deploy.yml
+
+          # # - kubectl delete deployment semaphore-demo-cicd-kubernetes-canary
+          # - REPLICAS=0
+          # - TRACK=canary
+          # - cat deployment.yml | envsubst | tee deploy.yml
+          # - kubectl apply -f deploy.yml
 
 
           # Our deployment.yml instructs Kubernetes to pull container image
@@ -71,28 +77,28 @@ blocks:
 
   # If deployment to production succeeded, let's create a new version of
   # our `latest` Docker image.
-  - name: Tag latest release
-    task:
-      env_vars:
-        - name: GCP_PROJECT_ID
-          value: semaphore-demo-cicd-kubernetes
-        - name: GCP_PROJECT_DEFAULT_ZONE
-          value: us-central1-c
-      secrets:
-        - name: gcp-key
-      prologue:
-        commands:
-          # Authenticate using the file injected from the secret
-          - gcloud auth activate-service-account --key-file=gcp-key.json
+  # - name: Tag latest release
+  #   task:
+  #     env_vars:
+  #       - name: GCP_PROJECT_ID
+  #         value: semaphore-demo-cicd-kubernetes
+  #       - name: GCP_PROJECT_DEFAULT_ZONE
+  #         value: us-central1-c
+  #     secrets:
+  #       - name: gcp-key
+  #     prologue:
+  #       commands:
+  #         # Authenticate using the file injected from the secret
+  #         - gcloud auth activate-service-account --key-file=gcp-key.json
 
-          # Don't forget -q to silence confirmation prompts
-          - gcloud auth configure-docker -q
-          - gcloud config set project $GCP_PROJECT_ID
-          - gcloud config set compute/zone $GCP_PROJECT_DEFAULT_ZONE
-          - checkout
-      jobs:
-      - name: docker tag latest
-        commands:
-          - docker pull "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
-          - docker tag "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID" "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:latest"
-          - docker push "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:latest"
+  #         # Don't forget -q to silence confirmation prompts
+  #         - gcloud auth configure-docker -q
+  #         - gcloud config set project $GCP_PROJECT_ID
+  #         - gcloud config set compute/zone $GCP_PROJECT_DEFAULT_ZONE
+  #         - checkout
+  #     jobs:
+  #     - name: docker tag latest
+  #       commands:
+  #         - docker pull "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
+  #         - docker tag "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID" "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:latest"
+  #         - docker push "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:latest"
