@@ -1,5 +1,5 @@
 version: v1.0
-name: Deploy to Kubernetes
+name: Canary Deployment (Google Cloud)
 agent:
   machine:
     type: e1-standard-2
@@ -7,7 +7,7 @@ agent:
 
 blocks:
 
-  - name: Push to Cloud Registry
+  - name: Push to Registry
     task:
       env_vars:
         - name: GCP_PROJECT_ID
@@ -18,7 +18,7 @@ blocks:
         - name: gcp-key
         - name: dockerhub
       jobs:
-      - name: Docker Push
+      - name: Push
         commands:
           - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
           - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
@@ -34,7 +34,7 @@ blocks:
 
           - docker push "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
 
-  - name: Deploy to Kubernetes
+  - name: Canary Deployment
     task:
       # For info on creating secrets, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
@@ -120,7 +120,7 @@ blocks:
       - name: Test
         commands:
           # test script in the pod
-          - kubectl exec -it $(kubectl get pod -l addressbook-canary -o name) -- npm run ping
+          - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run ping
 
 promotions:
   - name: Stable Deployment

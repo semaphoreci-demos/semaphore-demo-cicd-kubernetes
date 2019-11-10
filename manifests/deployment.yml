@@ -6,7 +6,8 @@ spec:
   replicas: $replicas
   selector:
     matchLabels:
-      app: semaphore-demo-cicd-kubernetes
+      app: addressbook
+      deployment: $deployment
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -15,10 +16,10 @@ spec:
   template:
     metadata:
       labels:
-        app: semaphore-demo-cicd-kubernetes
+        app: addressbook
     spec:
       containers:
-      - name: semaphore-demo-cicd-kubernetes
+      - name: addressbook
         image: $img
         env:
           - name: NODE_ENV

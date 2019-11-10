@@ -1,5 +1,5 @@
 version: v1.0
-name: Deploy to Kubernetes
+name: Stable Deployment (Google Cloud)
 agent:
   machine:
     type: e1-standard-2
@@ -7,7 +7,7 @@ agent:
 
 blocks:
 
-  - name: Deploy to Kubernetes
+  - name: Stable Deployment
     task:
       # For info on creating secrets, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
