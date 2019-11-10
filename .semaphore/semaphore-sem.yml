@@ -11,48 +11,43 @@ blocks:
   - name: Docker Build
     task:
 
-      secrets:
-        - name: dockerhub
-
       prologue:
         commands:
           - checkout
-          - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+          - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
 
       jobs:
         - name: Build
           commands:
-            - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:latest || true
-            - docker build --cache-from $DOCKER_USERNAME/seamphore-demo-cicd-kubernetes:latest -t $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID .
-            - docker push $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+            - docker pull semaphore-demo-cicd-kubernetes:latest || true
+            - docker build --cache-from seamphore-demo-cicd-kubernetes:latest -t semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID .
+            - docker push semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
   - name: Tests
     task:
       env_vars:
         - name: NODE_ENV
           value: test
-      secrets:
-        - name: dockerhub
 
       prologue:
         commands:
-            - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-            - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+          - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
+          - docker pull semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
       jobs:
         - name: Static test
           commands:
-            - docker run -it $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run lint
+            - docker run -it semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run lint
 
         - name: Integration test
           commands:
             - sem-service start postgres
-            - docker run --net=host -it $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run test
+            - docker run --net=host -it semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run test
 
         - name: Functional test
           commands:
             - sem-service start postgres
-            - docker run --net=host -it $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run ping
+            - docker run --net=host -it semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run ping
 
 promotions:
   - name: Canary Deployment
