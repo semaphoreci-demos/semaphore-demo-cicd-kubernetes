@@ -73,35 +73,17 @@ blocks:
           - kubectl get nodes
           - kubectl get pods
 
-          # create the load balancer
+          # Create the load balancer service
           - kubectl apply -f manifests/service.yml
-          # create the canary
+
+          # The following script creates a canary deployment with 1 replica
+          # We deploy the same docker image created in the docker build block
+          # which was tagged with $SEMAPHORE_WORKFLOW_ID
           - ./apply.sh addressbook-canary 1 "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
-          # scale back stable if exists
+
+          # Since we added an additional canary pod, if we had a stable deployment
+          # we might want to scale it back to 2 replicas to keep 3 replicas total.
           - if kubectl get deployment addressbook-stable; then kubectl scale --replicas=2 deployment/addressbook-stable; fi
-
-          # - export IMAGE="gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes"
-          # - export REPLICAS=1
-          # - export TRACK=canary
-          # - cat deployment.yml | envsubst | tee deploy.yml
-          # - kubectl apply -f deploy.yml
-
-          # - export REPLICAS=2
-          # - export TRACK=stable
-          # - cat deployment.yml | envsubst | tee deploy.yml
-          # - kubectl apply -f deploy.yml
-
-
-          # Our deployment.yml instructs Kubernetes to pull container image
-          # named semaphoredemos/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-          # envsubst is a tool which will replace $SEMAPHORE_WORKFLOW_ID with
-          # its current value. The same variable was used in server-docker-build.yml
-          # pipeline to tag and push a container image.
-          # - cat deployment.yml | envsubst | tee deploy.yml
-
-          # # Perform declarative deployment:
-          # - kubectl apply -f deploy.yml
-
         
   - name: Functional test
     task:
@@ -137,10 +119,9 @@ blocks:
 
       - name: Test
         commands:
-          # - sleep 20
           # test script in the pod
-          - kubectl exec -it $CANARY_POD $(kubectl get pod -l addressbook-canary -o name) -- npm run ping
+          - kubectl exec -it $(kubectl get pod -l addressbook-canary -o name) -- npm run ping
 
-# promotions:
-#   - name: Stable Deployment
-#     pipeline_file: deploy-stable-gcp.yml
+promotions:
+  - name: Stable Deployment
+    pipeline_file: deploy-stable-gcp.yml
