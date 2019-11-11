@@ -21,7 +21,8 @@ blocks:
       - name: Push
         commands:
           # Pull image from private registry
-          - docker pull semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+          - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
+          - docker pull $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
           # - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
           # - docker pull $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
@@ -35,7 +36,7 @@ blocks:
 
           # Upload image to cloud registry
           # - docker tag ${DOCKER_USERNAME}/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
-          - docker tag semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
+          - docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
           - docker push "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
 
   - name: Canary Deployment
