@@ -1,60 +1,42 @@
 A Companion Demo for the CI/CD with Docker and Kubernetes Book
 
-## Local
+## Run it in your workstation
 
-### Build
+    $ docker-compose up --build
+    $ curl -w "\n" -X PUT -d "firstName=al&lastName=pacino" 127.0.0.1:3000/person
+    $ curl -w "\n" 127.0.0.1:3000/all
 
-    npm install
-    cp env-sample .env
+## Configure CI/CD
 
-Set your database credentials in .env
+1. Fork this repository
+2. Clone it to your machine
+3. Sign up for Semaphore and install [sem cli](https://docs.semaphoreci.com/article/53-sem-reference).
+4. Add the project to Semaphore:
 
-Start test postgres and create database objects:
+    $ sem init
 
-    . ./.env
-    npm run migrate
+### Deploy to Cloud
 
-### Tests
+Services required:
 
-    npm run test
-    npm run lint
+- Kubernetes Cluster (recommended 3 nodes) called `addressbook`
+- PostgreSQL Database
 
-### Start Locally (needs a db)
+Create DB connection secret:
 
-    npm run start
+    $ sem create secret db-params \e
+        -e DB_USER=YOUR_DB_USERNAME \
+        -e DB_PASSWORD=YOUR_DB_PASSWORD \
+        -e DB_HOST=YOUR_DB_IP \
+        -e DB_PORT=YOUR_DB_PORT (5432) \
+        -e DB_SCHEMA=YOUR_DB_SCHEMA (postgres) \
+        -e DB_SSL=true|false (empty)
 
-or with nodemon
+### Google Cloud
 
-    npm run start:dev
+Create service account and generate a key file. Upload the file to Semaphore:
 
-### Start Locally With Docker
-
-    docker-compose up --build
-
-### Use the API Locally
-
-    curl -w "\n" -X PUT -d "firstName=al&lastName=pacino" 127.0.0.1:3000/person
-    curl -w "\n" 127.0.0.1:3000/all
-
-## DigitalOcean
-
-Provision Services:
- - postgres cluster: create a database `addressbook_db` and a user `addressbook_user`
- - kubernetes cluster: set the cluster name `addressbook-server`
-
-### Create secrets
-
-For every platform
-
-- db-params
-    - DB_USER
-    - DB_PASSWORD
-    - DB_HOST
-
-For Google Cloud
-
-- gcp-key
-    - <json file>:/home/semaphore/gcp-key.json
+    $ sem create secret gcp-key -f YOUR_KEY_FILE.json:/home/semaphore/gcp-key.json
 
 For DigitalOcean
 
@@ -64,8 +46,3 @@ For DigitalOcean
 
 - do-access-token
   - DO_ACCESS_TOKEN=YOUR_DIGITALOCEAN_TOKEN
-
-
-
-LICENSE
-
