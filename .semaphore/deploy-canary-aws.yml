@@ -17,7 +17,7 @@ blocks:
         # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: aws-k8s
         # Import the AWS access key environment variables
-        - name: AWS
+        # - name: AWS
       # Define environment variables for the jobs on this block.
       # For info on environment variables, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
