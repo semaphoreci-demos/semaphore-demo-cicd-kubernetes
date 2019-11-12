@@ -1,0 +1,38 @@
+version: v1.0
+name: Deploy Stable (DigitalOcean)
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+
+blocks:
+  - name: Deploy Stable
+    task:
+      secrets:
+        - name: do-access-token
+        - name: db-params
+      env_vars:
+        - name: CLUSTER_NAME
+          value: semaphore-demo-cicd-kubernetes
+      prologue:
+        commands:
+          - wget https://github.com/digitalocean/doctl/releases/download/v1.20.0/doctl-1.20.0-linux-amd64.tar.gz
+          - tar xf doctl-1.20.0-linux-amd64.tar.gz 
+          - sudo cp doctl /usr/local/bin
+          - doctl auth init --access-token $DO_ACCESS_TOKEN
+          - doctl kubernetes cluster kubeconfig save "${CLUSTER_NAME}"
+          - checkout
+      jobs:
+      - name: Deploy
+        commands:
+          - kubectl get nodes
+          - kubectl get pods
+
+          # The following script creates a stable deployment with 3 replicas
+          # We deploy the same docker image created in the docker build block
+          # which was tagged with $SEMAPHORE_WORKFLOW_ID
+          - ./apply.sh addressbook-stable 3 $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+
+          # Since the canary deployment was a success, we no longer need it, 
+          # we delete it if it still exists
+          - if kubectl get deployment addressbook-canary; then kubectl delete deployment/addressbook-canary; fi

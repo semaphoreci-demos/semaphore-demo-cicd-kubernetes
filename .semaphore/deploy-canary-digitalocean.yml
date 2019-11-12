@@ -1,0 +1,57 @@
+version: v1.0
+name: Deploy Canary (DigitalOcean)
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+
+blocks:
+  - name: Push to Registry
+    task:
+      secrets:
+        - name: dockerhub
+      jobs:
+      - name: Push
+        commands:
+          # Pull image from private registry
+          - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
+          - docker pull $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+          # Login to DockerHub and push
+          - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+          - docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+          - docker push $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+
+  - name: Deploy Canary
+    task:
+      secrets:
+        - name: do-access-token
+        - name: db-params
+      env_vars:
+        - name: CLUSTER_NAME
+          value: semaphore-demo-cicd-kubernetes
+      prologue:
+        commands:
+          - wget https://github.com/digitalocean/doctl/releases/download/v1.20.0/doctl-1.20.0-linux-amd64.tar.gz
+          - tar xf doctl-1.20.0-linux-amd64.tar.gz 
+          - sudo cp doctl /usr/local/bin
+          - doctl auth init --access-token $DO_ACCESS_TOKEN
+          - doctl kubernetes cluster kubeconfig save "${CLUSTER_NAME}"
+          - checkout
+      jobs:
+      - name: Deploy
+        commands:
+          # Create the load balancer service
+          - kubectl apply -f manifests/service.yml
+
+          # The following script creates a canary deployment with 1 replica
+          # We deploy the same docker image created in the docker build block
+          # which was tagged with $SEMAPHORE_WORKFLOW_ID
+          - ./apply.sh addressbook-canary 1 $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+
+          # Since we added an additional canary pod, if we had a stable deployment
+          # we might want to scale it back to 2 replicas to keep 3 replicas total.
+          - if kubectl get deployment addressbook-stable; then kubectl scale --replicas=2 deployment/addressbook-stable; fi
+
+promotions:
+  - name: Stable Deployment
+    pipeline_file: deploy-stable-digitalocean.yml
