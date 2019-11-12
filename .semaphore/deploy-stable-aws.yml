@@ -1,7 +1,7 @@
 # Deploy Stable version to AWS
 
 version: v1.0
-name: Deploy to Kubernetes
+name: Deploy to Kubernetes (AWS)
 agent:
   machine:
     type: e1-standard-2
