@@ -1,4 +1,4 @@
-# This pipeline runs after docker-build.yml
+# Deploy Canary version to AWS
 
 version: v1.0
 name: Deploy to Kubernetes
@@ -27,21 +27,20 @@ blocks:
           value: us-east-2
         # Replace value with your ECR URL
         - name: ECR_REGISTRY
-          value: 890702391356.dkr.ecr.us-east-2.amazonaws.com/semaphore-demo-ruby-kubernetes
+          value: 890702391356.dkr.ecr.us-east-2.amazonaws.com
       jobs:
       - name: Push
         commands:
             - checkout
             - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
             - docker pull $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-            - docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID "${ECR_REGISTRY}:${SEMAPHORE_WORKFLOW_ID}"
-            # Install the most up-to-date AWS cli
+            # Install the most up-to-date AWS cli and login to ECR
             - sudo pip install awscli
-            # ecr get-login outputs a login command, so execute that with bash
             - aws ecr get-login --no-include-email | bash
             - docker images
-            # Push a new image to ECR:
-            - docker push "${ECR_REGISTRY}:${SEMAPHORE_WORKFLOW_ID}"
+            # Push a new image to ECR
+            - docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID $ECR_REGISTRY/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+            - docker push $ECR_REGISTRY/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
   - name: Deploy to Kubernetes
     task:
@@ -62,23 +61,25 @@ blocks:
           value: us-east-2
         # Replace value with your ECR URL
         - name: ECR_REGISTRY
-          value: 890702391356.dkr.ecr.us-east-2.amazonaws.com/semaphore-demo-ruby-kubernetes
+          value: 890702391356.dkr.ecr.us-east-2.amazonaws.com
       jobs:
         - name: Deploy
           commands:
             - checkout
-            # kubectl needs aws-iam-authenticator in PATH:
+
+            # Kubectl needs aws-iam-authenticator in PATH
             - mkdir -p ~/bin
             - curl -o ~/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.12.7/2019-03-27/bin/linux/amd64/aws-iam-authenticator
             - chmod a+x ~/bin/aws-iam-authenticator
             - export PATH=~/bin:$PATH
             - kubectl get pods
-            # Kubernetes needs to authenticate with ECR to pull the container image. 
-            # The auth token only lasts a few hours. So we create a new one each time.
+
+            # Kubernetes needs to authenticate with ECR to pull the container image,
+            # the auth token only lasts a few hours. So we create a new one each time.
             - sudo pip install awscli
             - export ECR_PASSWORD=$(aws ecr get-login --no-include-email | awk '{print $6}')
             - kubectl delete secret aws-ecr || true
-            - kubectl create secret docker-registry aws-ecr --docker-server=https://$ECR_REGISTRY --docker-username=AWS --docker-password=$ECR_PASSWORD
+            - kubectl create secret docker-registry aws-ecr --docker-server=https://$ECR_REGISTRY/semaphore-demo-cicd-kubernetes --docker-username=AWS --docker-password=$ECR_PASSWORD
             - kubectl get secret aws-ecr
 
             # Create the load balancer service
@@ -87,7 +88,7 @@ blocks:
             # The following script creates a canary deployment with 1 replica
             # We deploy the same docker image created in the docker build block
             # which was tagged with $SEMAPHORE_WORKFLOW_ID
-            - ./apply.sh addressbook-canary 1 "${ECR_REGISTRY}:$SEMAPHORE_WORKFLOW_ID"
+            - ./apply.sh manifests/deployment-aws.yml addressbook-canary 1 $ECR_REGISTRY/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
             # Since we added an additional canary pod, if we had a stable deployment
             # we might want to scale it back to 2 replicas to keep 3 replicas total.

@@ -75,7 +75,7 @@ blocks:
           # The following script creates a canary deployment with 1 replica
           # We deploy the same docker image created in the docker build block
           # which was tagged with $SEMAPHORE_WORKFLOW_ID
-          - ./apply.sh addressbook-canary 1 "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
+          - ./apply.sh manifests/deployment.yml addressbook-canary 1 "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
 
           # Since we added an additional canary pod, if we had a stable deployment
           # we might want to scale it back to 2 replicas to keep 3 replicas total.
