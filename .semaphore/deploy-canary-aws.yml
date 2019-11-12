@@ -26,6 +26,8 @@ blocks:
         # Replace value with your ECR URL
         - name: ECR_REGISTRY
           value: 890702391356.dkr.ecr.us-east-2.amazonaws.com
+        - name: KUBECONFIG
+          value: /home/semaphore/aws-key.yml
       jobs:
       - name: Push
         commands:
@@ -107,6 +109,8 @@ blocks:
         # Adjust with your AWS Region  
         - name: AWS_DEFAULT_REGION
           value: us-east-2
+        - name: KUBECONFIG
+          value: /home/semaphore/aws-key.yml
 
 
       jobs:
