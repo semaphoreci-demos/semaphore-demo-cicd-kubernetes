@@ -11,8 +11,6 @@ blocks:
   - name: Stable deployment
     task:
       secrets:
-        # Mount a secret which defines /home/semaphore/.kube/aws-k8s.yaml.
-        # By mounting it, we make file available in the job environment.
         # For info on creating secrets, see:
         # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: aws-key
