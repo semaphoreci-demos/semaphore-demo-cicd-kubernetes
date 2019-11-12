@@ -81,7 +81,7 @@ blocks:
           # we might want to scale it back to 2 replicas to keep 3 replicas total.
           - if kubectl get deployment addressbook-stable; then kubectl scale --replicas=2 deployment/addressbook-stable; fi
         
-  - name: Functional test
+  - name: Functional test and migration
     task:
       # For info on creating secrets, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
@@ -113,10 +113,12 @@ blocks:
           - checkout
       jobs:
 
-      - name: Test
+      - name: Test and migrate db
         commands:
           # Run test script in the pod
           - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run ping
+          # Run migrations script
+          - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run migrate
 
 promotions:
   - name: Stable Deployment

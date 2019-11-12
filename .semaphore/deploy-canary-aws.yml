@@ -49,9 +49,10 @@ blocks:
         # By mounting it, we make file available in the job environment.
         # For info on creating secrets, see:
         # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
-        - name: aws-k8s
+        - name: aws-key
         # Import the AWS access key environment variables
-        - name: AWS
+        # - name: AWS
+        - name: db-params
       # Define environment variables for the jobs on this block.
       # For info on environment variables, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
@@ -93,6 +94,49 @@ blocks:
             # Since we added an additional canary pod, if we had a stable deployment
             # we might want to scale it back to 2 replicas to keep 3 replicas total.
             - if kubectl get deployment addressbook-stable; then kubectl scale --replicas=2 deployment/addressbook-stable; fi
+
+  - name: Functional test and migration
+    task:
+      secrets:
+        # Mount a secret which defines /home/semaphore/.kube/aws-k8s.yaml.
+        # By mounting it, we make file available in the job environment.
+        # For info on creating secrets, see:
+        # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
+        - name: aws-key
+        # Import the AWS access key environment variables
+        # - name: AWS
+        - name: db-params
+      # Define environment variables for the jobs on this block.
+      # For info on environment variables, see:
+      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
+      env_vars:
+        # Adjust with your AWS Region  
+        - name: AWS_DEFAULT_REGION
+          value: us-east-2
+
+
+      jobs:
+      - name: Test and migrate db
+        commands:
+          # Kubectl needs aws-iam-authenticator in PATH
+          - mkdir -p ~/bin
+          - curl -o ~/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.12.7/2019-03-27/bin/linux/amd64/aws-iam-authenticator
+          - chmod a+x ~/bin/aws-iam-authenticator
+          - export PATH=~/bin:$PATH
+          - kubectl get pods
+
+          # Kubernetes needs to authenticate with ECR to pull the container image,
+          # the auth token only lasts a few hours. So we create a new one each time.
+          - sudo pip install awscli
+          # - export ECR_PASSWORD=$(aws ecr get-login --no-include-email | awk '{print $6}')
+          # - kubectl delete secret aws-ecr || true
+          # - kubectl create secret docker-registry aws-ecr --docker-server=https://$ECR_REGISTRY/semaphore-demo-cicd-kubernetes --docker-username=AWS --docker-password=$ECR_PASSWORD
+          # - kubectl get secret aws-ecr
+
+          # Run test script in the pod
+          - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run ping
+          # Run migrations script
+          - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run migrate
 
 promotions:
   - name: Stable Deployment
