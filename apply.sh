@@ -1,14 +1,22 @@
 #!/usr/bin/env bash
-# apply a kubernetes manifest
+# apply a kubernetes manifest and wait for rollout
+#
+# usage:
+#   apply.sh manifest/DEPLOYMENT_FILE.yml DEPLOYMENT_NAME REPLICAS IMAGE
+#
+# example:
+#   apply.sh manifest/deployment.yml addressbook-stable 3 $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:latest
+#
 
 set -e
 
-export deployment=$1
-export replicas=$2
-export img=$3
+export manifest=$1
+export deployment=$2
+export replicas=$3
+export img=$4
 
-manifest=$(mktemp)
-cat manifests/deployment.yml | envsubst | tee $manifest
-kubectl apply -f $manifest
-kubectl rollout status -f $manifest
-rm -f $manifest
+apply_tmp=$(mktemp)
+cat $manifest | envsubst | tee $apply_tmp
+kubectl apply -f $apply_tmp
+kubectl rollout status -f $apply_tmp
+rm -f $apply_tmp

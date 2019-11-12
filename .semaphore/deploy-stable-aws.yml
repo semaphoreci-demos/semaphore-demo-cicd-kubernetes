@@ -1,5 +1,7 @@
+# Deploy Stable version to AWS
+
 version: v1.0
-name: Deploy to Kubernetes
+name: Deploy to Kubernetes (AWS)
 agent:
   machine:
     type: e1-standard-2
@@ -9,13 +11,12 @@ blocks:
   - name: Stable deployment
     task:
       secrets:
-        # Mount a secret which defines /home/semaphore/.kube/aws-k8s.yaml.
-        # By mounting it, we make file available in the job environment.
         # For info on creating secrets, see:
         # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
-        - name: aws-k8s
+        - name: aws-key
         # Import the AWS access key environment variables
-        - name: AWS
+        - name: db-params
+        # - name: AWS
       # Define environment variables for the jobs on this block.
       # For info on environment variables, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
@@ -25,30 +26,34 @@ blocks:
           value: us-east-2
         # Replace value with your ECR URL
         - name: ECR_REGISTRY
-          value: 890702391356.dkr.ecr.us-east-2.amazonaws.com/semaphore-demo-ruby-kubernetes
+          value: 890702391356.dkr.ecr.us-east-2.amazonaws.com
+        - name: KUBECONFIG
+          value: /home/semaphore/aws-key.yml
 
       jobs:
         - name: Deploy
           commands:
             - checkout
-            # kubectl needs aws-iam-authenticator in PATH:
+
+            # Kubectl needs aws-iam-authenticator in PATH:
             - mkdir -p ~/bin
             - curl -o ~/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.12.7/2019-03-27/bin/linux/amd64/aws-iam-authenticator
             - chmod a+x ~/bin/aws-iam-authenticator
             - export PATH=~/bin:$PATH
             - kubectl get pods
-            # Kubernetes needs to authenticate with ECR to pull the container image. 
-            # The auth token only lasts a few hours. So we create a new one each time.
+
+            # Kubernetes needs to authenticate with ECR to pull the container image,
+            # rhe auth token only lasts a few hours. So we create a new one each time.
             - sudo pip install awscli
             - export ECR_PASSWORD=$(aws ecr get-login --no-include-email | awk '{print $6}')
             - kubectl delete secret aws-ecr || true
-            - kubectl create secret docker-registry aws-ecr --docker-server=https://$ECR_REGISTRY --docker-username=AWS --docker-password=$ECR_PASSWORD
+            - kubectl create secret docker-registry aws-ecr --docker-server=https://$ECR_REGISTRY/semaphore-demo-cicd-kubernetes --docker-username=AWS --docker-password=$ECR_PASSWORD
             - kubectl get secret aws-ecr
 
             # The following script creates a stable deployment with 3 replicas
             # We deploy the same docker image created in the docker build block
             # which was tagged with $SEMAPHORE_WORKFLOW_ID
-            - ./apply.sh addressbook-stable 3 "${ECR_REGISTRY}:$SEMAPHORE_WORKFLOW_ID"
+            - ./apply.sh manifests/deployment-aws.yml addressbook-stable 3 $ECR_REGISTRY/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
             # Since the canary deployment was a success, we no longer need it, 
             # we delete it if it still exists

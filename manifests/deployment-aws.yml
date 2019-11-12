@@ -18,6 +18,8 @@ spec:
         app: addressbook
         deployment: $deployment
     spec:
+      imagePullSecrets:
+        - name: aws-ecr
       containers:
         - name: addressbook
           image: $img
