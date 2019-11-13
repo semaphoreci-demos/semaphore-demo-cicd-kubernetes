@@ -10,9 +10,10 @@ blocks:
 
   - name: Push to Registry
     task:
+      # Import DockerHub username and password secret
+      # For info on creating secrets, see:
+      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
-        # For info on creating secrets, see:
-        # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: dockerhub
       jobs:
         - name: Push
@@ -29,11 +30,12 @@ blocks:
   - name: Deploy to Kubernetes
     task:
       secrets:
-        # Import DO token and database credential secrets
+        # Import DO token, dockerhub and database credential secrets
         # For info on creating secrets, see:
         # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: do-key
         - name: db-params
+        - name: dockerhub
 
       # Define environment variables for the jobs on this block.
       # For info on environment variables, see:
@@ -101,6 +103,6 @@ blocks:
             # Run migrations script
             - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run migrate
 
-# promotions:
-#   - name: Stable Deployment
-#     pipeline_file: deploy-stable-digitalocean.yml
+promotions:
+  - name: Stable Deployment
+    pipeline_file: deploy-stable-digitalocean.yml
