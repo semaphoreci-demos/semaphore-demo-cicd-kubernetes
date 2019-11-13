@@ -10,12 +10,12 @@ blocks:
 
   - name: Push to Registry
     task:
+      # Import secret containing AWS token and kubeconfig
+      # For info on creating secrets, see:
+      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
-        # For info on creating secrets, see:
-        # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: aws-key
-        # Import the AWS access key environment variables
-        # - name: AWS
+
       # Define environment variables for the jobs on this block.
       # For info on environment variables, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
@@ -26,29 +26,33 @@ blocks:
         # Replace value with your ECR URL
         - name: ECR_REGISTRY
           value: 890702391356.dkr.ecr.us-east-2.amazonaws.com
+
       jobs:
       - name: Push
         commands:
-            - checkout
+            # Pull image from private registry
             - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
             - docker pull $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+
             # Install the most up-to-date AWS cli and login to ECR
             - sudo pip install awscli
             - aws ecr get-login --no-include-email | bash
             - docker images
+
             # Push a new image to ECR
             - docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID $ECR_REGISTRY/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
             - docker push $ECR_REGISTRY/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
-  - name: Deploy to Kubernetes
+  - name: Deploy
     task:
+      # Import secret containing AWS token and kubeconfig.
+      # Import database username and password secret.
+      # For info on creating secrets, see:
+      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
-        # For info on creating secrets, see:
-        # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: aws-key
-        # Import the AWS access key environment variables
-        # - name: AWS
         - name: db-params
+
       # Define environment variables for the jobs on this block.
       # For info on environment variables, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
@@ -61,26 +65,29 @@ blocks:
           value: 890702391356.dkr.ecr.us-east-2.amazonaws.com
         - name: KUBECONFIG
           value: /home/semaphore/aws-key.yml
+
+      prologue:
+        commands:
+          - checkout
+
+          # Kubectl needs aws-iam-authenticator in PATH to work with AWS
+          - mkdir -p ~/bin
+          - curl -o ~/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.12.7/2019-03-27/bin/linux/amd64/aws-iam-authenticator
+          - chmod a+x ~/bin/aws-iam-authenticator
+          - export PATH=~/bin:$PATH
+          - kubectl get pods
+
+          # Kubernetes needs to authenticate with ECR to pull the container image,
+          # the auth token only lasts a few hours. So we create a new one each time.
+          - sudo pip install awscli
+          - export ECR_PASSWORD=$(aws ecr get-login --no-include-email | awk '{print $6}')
+          - kubectl delete secret aws-ecr || true
+          - kubectl create secret docker-registry aws-ecr --docker-server=https://$ECR_REGISTRY/semaphore-demo-cicd-kubernetes --docker-username=AWS --docker-password=$ECR_PASSWORD
+          - kubectl get secret aws-ecr
+
       jobs:
         - name: Deploy
           commands:
-            - checkout
-
-            # Kubectl needs aws-iam-authenticator in PATH
-            - mkdir -p ~/bin
-            - curl -o ~/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.12.7/2019-03-27/bin/linux/amd64/aws-iam-authenticator
-            - chmod a+x ~/bin/aws-iam-authenticator
-            - export PATH=~/bin:$PATH
-            - kubectl get pods
-
-            # Kubernetes needs to authenticate with ECR to pull the container image,
-            # the auth token only lasts a few hours. So we create a new one each time.
-            - sudo pip install awscli
-            - export ECR_PASSWORD=$(aws ecr get-login --no-include-email | awk '{print $6}')
-            - kubectl delete secret aws-ecr || true
-            - kubectl create secret docker-registry aws-ecr --docker-server=https://$ECR_REGISTRY/semaphore-demo-cicd-kubernetes --docker-username=AWS --docker-password=$ECR_PASSWORD
-            - kubectl get secret aws-ecr
-
             # Create the load balancer service
             - kubectl apply -f manifests/service.yml
 
@@ -96,12 +103,13 @@ blocks:
   - name: Functional test and migration
     task:
       secrets:
+        # Import secret containing AWS token and kubeconfig
+        # Import database username and password secret
         # For info on creating secrets, see:
         # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: aws-key
-        # Import the AWS access key environment variables
-        # - name: AWS
         - name: db-params
+
       # Define environment variables for the jobs on this block.
       # For info on environment variables, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
@@ -112,28 +120,23 @@ blocks:
         - name: KUBECONFIG
           value: /home/semaphore/aws-key.yml
 
-      jobs:
-      - name: Test and migrate db
+      prologue:
         commands:
-          # Kubectl needs aws-iam-authenticator in PATH
+          # Kubectl needs aws-iam-authenticator in PATH to work with AWS
           - mkdir -p ~/bin
           - curl -o ~/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.12.7/2019-03-27/bin/linux/amd64/aws-iam-authenticator
           - chmod a+x ~/bin/aws-iam-authenticator
           - export PATH=~/bin:$PATH
-          - kubectl get pods
-
-          # Kubernetes needs to authenticate with ECR to pull the container image,
-          # the auth token only lasts a few hours. So we create a new one each time.
           - sudo pip install awscli
-          # - export ECR_PASSWORD=$(aws ecr get-login --no-include-email | awk '{print $6}')
-          # - kubectl delete secret aws-ecr || true
-          # - kubectl create secret docker-registry aws-ecr --docker-server=https://$ECR_REGISTRY/semaphore-demo-cicd-kubernetes --docker-username=AWS --docker-password=$ECR_PASSWORD
-          # - kubectl get secret aws-ecr
+          - kubectl get deployments
 
-          # Run test script in the pod
-          - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run ping
-          # Run migrations script
-          - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run migrate
+      jobs:
+        - name: Test and migrate db
+          commands:
+            # Run test script in the pod
+            - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run ping
+            # Run migrations script
+            - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run migrate
 
 promotions:
   - name: Stable Deployment

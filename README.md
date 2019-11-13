@@ -19,7 +19,7 @@ A Companion Demo for the CI/CD with Docker and Kubernetes Book
 
 Services required:
 
-- Kubernetes Cluster (recommended 3 nodes) called `addressbook`
+- Kubernetes Cluster (recommended 3 nodes) called `semaphore-demo-cicd-kubernetes`
 - PostgreSQL Database
 
 Create DB connection secret:
@@ -32,17 +32,37 @@ Create DB connection secret:
         -e DB_SCHEMA=YOUR_DB_SCHEMA (postgres) \
         -e DB_SSL=true|false (empty)
 
-### Google Cloud
+Next, open the relevant pipeline files at `.semaphore` and fill in the environment variables for the blocks.
 
-Create service account and generate a key file. Upload the file to Semaphore:
+### Create Secrets
+
+Each cloud provider has specific secrets you need to create.
+
+#### AWS
+
+- Create an IAM User with Administrator permissions. Create a secret with the access id and the Kubernetes kubeconfig file:
+
+    $ sem create secret aws-key \
+        -e AWS_ACCESS_KEY_ID=YOUR_AWS_ACCESS_ID \
+        -e AWS_SECRET_ACCESS_KEY=YOUR_AWS_SECRET_KEY \
+        -f YOUR_KUBECONFIG.yml:/home/semaphore/aws-key.yml
+
+#### Google Cloud
+
+- Create service account and generate a key file. Upload the file to Semaphore:
 
     $ sem create secret gcp-key -f YOUR_KEY_FILE.json:/home/semaphore/gcp-key.json
 
-For DigitalOcean
+#### DigitalOcean
 
-- dockerhub
-  - DOCKER_USERNAME=YOUR_USERNAME
-  - DOCKER_PASSWORD=YOUR_PASSWORD
+- Get your authentication API Token and create a secret for it:
 
-- do-access-token
-  - DO_ACCESS_TOKEN=YOUR_DIGITALOCEAN_TOKEN
+    $ sem create secret do-key -e DO_ACCESS_TOKEN=YOUR_DIGITALOCEAN_TOKEN
+
+- Set the parameter in `db-params` secret to `DB_SSL=true`
+
+- Create a secret to store your DockerHub credentials:
+
+    $ sem create secret dockerhub \
+        -e DOCKER_USERNAME=YOUR_DOCKERHUB_USER \
+        -e DOCKRE_PASSWORD=YOUR_DOCKERHUB_PASSWORD

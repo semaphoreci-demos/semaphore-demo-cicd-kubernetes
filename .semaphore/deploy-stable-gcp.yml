@@ -9,12 +9,14 @@ blocks:
 
   - name: Stable Deployment
     task:
+      # Import secret with GCP access key file..
       # For info on creating secrets, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
         - name: gcp-key
         - name: db-params
 
+      # Define Google Cloud project name and zone.
       # Set environment variables that your project requires.
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:

@@ -1,7 +1,7 @@
 # Deploy Stable version to AWS
 
 version: v1.0
-name: Deploy to Kubernetes (AWS)
+name: Deploy (AWS)
 agent:
   machine:
     type: e1-standard-2
@@ -11,6 +11,8 @@ blocks:
   - name: Stable deployment
     task:
       secrets:
+        # Import secret containing AWS token and kubeconfig.
+        # Import database username and password secret.
         # For info on creating secrets, see:
         # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: aws-key
@@ -21,7 +23,7 @@ blocks:
       # For info on environment variables, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
-        # Adjust with your AWS Region  
+        # Adjust with your AWS Region
         - name: AWS_DEFAULT_REGION
           value: us-east-2
         # Replace value with your ECR URL
