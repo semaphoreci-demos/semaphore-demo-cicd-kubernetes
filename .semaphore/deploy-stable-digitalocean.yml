@@ -14,7 +14,7 @@ blocks:
       # For info on creating secrets, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
-        - name: do-access-token
+        - name: do-key
         - name: db-params
         - name: dockerhub
 
