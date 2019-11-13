@@ -1,3 +1,5 @@
+# Deploy Stable version to DigitalOcean
+
 version: v1.0
 name: Deploy Stable (DigitalOcean)
 agent:
@@ -8,20 +10,31 @@ agent:
 blocks:
   - name: Deploy Stable
     task:
+      # Import DO Token, db parameters and DockerHub credentials
+      # For info on creating secrets, see:
+      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
-        - name: do-access-token
+        - name: do-key
         - name: db-params
+        - name: dockerhub
+
+      # Define environment variables for the jobs on this block.
+      # For info on environment variables, see:
+      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
+
       prologue:
         commands:
+          # Install DO cli
           - wget https://github.com/digitalocean/doctl/releases/download/v1.20.0/doctl-1.20.0-linux-amd64.tar.gz
           - tar xf doctl-1.20.0-linux-amd64.tar.gz 
           - sudo cp doctl /usr/local/bin
           - doctl auth init --access-token $DO_ACCESS_TOKEN
           - doctl kubernetes cluster kubeconfig save "${CLUSTER_NAME}"
           - checkout
+
       jobs:
       - name: Deploy
         commands:
@@ -31,7 +44,7 @@ blocks:
           # The following script creates a stable deployment with 3 replicas
           # We deploy the same docker image created in the docker build block
           # which was tagged with $SEMAPHORE_WORKFLOW_ID
-          - ./apply.sh addressbook-stable 3 $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+          - ./apply.sh manifests/deployment.yml addressbook-stable 3 $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
           # Since the canary deployment was a success, we no longer need it, 
           # we delete it if it still exists
