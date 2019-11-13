@@ -1,4 +1,4 @@
-# Deploy Canary version to AWS
+# Deploy Canary version to DigitalOcean
 
 version: v1.0
 name: Deploy to Kubernetes (DigitalOcean)
@@ -17,9 +17,11 @@ blocks:
       jobs:
         - name: Push
           commands:
+              # Pull from private registry
               - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
               - docker pull $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-              # Login to DockerHub and push
+
+              # Push to DockerHub
               - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
               - docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
               - docker push $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
@@ -27,24 +29,29 @@ blocks:
   - name: Deploy to Kubernetes
     task:
       secrets:
+        # Import DO token and database credential secrets
         # For info on creating secrets, see:
         # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: do-key
         - name: db-params
+
       # Define environment variables for the jobs on this block.
       # For info on environment variables, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
+
       prologue:
         commands:
+          # Install DO cli
           - wget https://github.com/digitalocean/doctl/releases/download/v1.20.0/doctl-1.20.0-linux-amd64.tar.gz
           - tar xf doctl-1.20.0-linux-amd64.tar.gz 
           - sudo cp doctl /usr/local/bin
           - doctl auth init --access-token $DO_ACCESS_TOKEN
           - doctl kubernetes cluster kubeconfig save "${CLUSTER_NAME}"
           - checkout
+
       jobs:
         - name: Deploy
           commands:
@@ -54,7 +61,7 @@ blocks:
             # The following script creates a canary deployment with 1 replica
             # We deploy the same docker image created in the docker build block
             # which was tagged with $SEMAPHORE_WORKFLOW_ID
-            - ./apply.sh manifest/deployment.yml addressbook-canary 1 $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+            - ./apply.sh manifests/deployment.yml addressbook-canary 1 $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
             # Since we added an additional canary pod, if we had a stable deployment
             # we might want to scale it back to 2 replicas to keep 3 replicas total.
@@ -64,18 +71,22 @@ blocks:
   - name: Functional test and migration
     task:
       secrets:
+        # Import DO token and database credential secrets
         # For info on creating secrets, see:
         # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: do-key
         - name: db-params
+
       # Define environment variables for the jobs on this block.
       # For info on environment variables, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
+
       prologue:
         commands:
+          # Install DO cli
           - wget https://github.com/digitalocean/doctl/releases/download/v1.20.0/doctl-1.20.0-linux-amd64.tar.gz
           - tar xf doctl-1.20.0-linux-amd64.tar.gz 
           - sudo cp doctl /usr/local/bin
