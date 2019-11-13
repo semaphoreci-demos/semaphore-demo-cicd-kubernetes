@@ -1,3 +1,5 @@
+# Canary deployment to Google Cloud
+
 version: v1.0
 name: Canary Deployment (Google Cloud)
 agent:
@@ -9,17 +11,25 @@ blocks:
 
   - name: Push to Registry
     task:
+      # Define Google Cloud project name and zone.
+      # Set your zone, eg. us-centra1-c
+      # Set environment variables that your project requires.
+      # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: GCP_PROJECT_ID
           value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_DEFAULT_ZONE
-          value: us-central1-c
+          value: YOUR_GCP_ZONE
+
+      # Import secret with GCP access key file..
+      # For info on creating secrets, see:
+      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
         - name: gcp-key
       jobs:
       - name: Push
         commands:
-          # Pull image from private registry
+          # Pull image from Semaphore private registry
           - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
           - docker pull $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
@@ -35,21 +45,24 @@ blocks:
 
   - name: Canary Deployment
     task:
+      # Import secret with GCP access key file..
       # For info on creating secrets, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
         - name: gcp-key
         - name: db-params
 
+      # Define Google Cloud project name and zone.
+      # Set your zone, eg. us-centra1-c
       # Set environment variables that your project requires.
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: GCP_PROJECT_ID
           value: semaphore-demo-cicd-kubernetes
-        - name: GCP_PROJECT_DEFAULT_ZONE
-          value: us-central1-c
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
+        - name: GCP_PROJECT_DEFAULT_ZONE
+          value: YOUR_GCP_ZONE
 
       prologue:
         commands:
@@ -83,11 +96,14 @@ blocks:
         
   - name: Functional test and migration
     task:
+      # Import secret with GCP access key file..
       # For info on creating secrets, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
         - name: gcp-key
 
+      # Define Google Cloud project name and zone.
+      # Set your zone, eg. us-centra1-c
       # Set environment variables that your project requires.
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
@@ -96,7 +112,7 @@ blocks:
         - name: GCP_PROJECT_ID
           value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_DEFAULT_ZONE
-          value: us-central1-c
+          value: YOUR_GCP_ZONE
 
       prologue:
         commands:
@@ -110,7 +126,6 @@ blocks:
 
           # Get kubectl config file
           - gcloud container clusters get-credentials $CLUSTER_NAME --zone $GCP_PROJECT_DEFAULT_ZONE --project $GCP_PROJECT_ID
-          - checkout
       jobs:
 
       - name: Test and migrate db

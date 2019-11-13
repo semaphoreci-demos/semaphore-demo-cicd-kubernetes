@@ -1,7 +1,7 @@
 # Deploy Canary version to DigitalOcean
 
 version: v1.0
-name: Deploy to Kubernetes (DigitalOcean)
+name: Deploy (DigitalOcean)
 agent:
   machine:
     type: e1-standard-2
@@ -27,7 +27,7 @@ blocks:
               - docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
               - docker push $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
-  - name: Deploy to Kubernetes
+  - name: Deploy
     task:
       secrets:
         # Import DO token, dockerhub and database credential secrets.
