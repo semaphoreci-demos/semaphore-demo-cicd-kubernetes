@@ -77,11 +77,11 @@ promotions:
   #   pipeline_file: deploy-canary-gcp.yml
   #   auto_promote:
   #     when: "result = 'passed' and (branch = 'master' or tag =~ '^hotfix*')"
-  - name: Canary Deployment
-    pipeline_file: deploy-canary-aws.yml
-    auto_promote:
-      when: "result = 'passed' and (branch = 'master' or tag =~ '^hotfix*')"
   # - name: Canary Deployment
-  #   pipeline_file: deploy-canary-digitalocean.yml
+  #   pipeline_file: deploy-canary-aws.yml
   #   auto_promote:
   #     when: "result = 'passed' and (branch = 'master' or tag =~ '^hotfix*')"
+  - name: Canary Deployment
+    pipeline_file: deploy-canary-digitalocean.yml
+    auto_promote:
+      when: "result = 'passed' and (branch = 'master' or tag =~ '^hotfix*')"
