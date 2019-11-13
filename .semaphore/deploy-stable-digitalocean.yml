@@ -44,7 +44,7 @@ blocks:
           # The following script creates a stable deployment with 3 replicas
           # We deploy the same docker image created in the docker build block
           # which was tagged with $SEMAPHORE_WORKFLOW_ID
-          - ./apply.sh addressbook-stable 3 $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
+          - ./apply.sh manifest/deployment.yml addressbook-stable 3 $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
           # Since the canary deployment was a success, we no longer need it, 
           # we delete it if it still exists

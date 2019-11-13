@@ -18,12 +18,11 @@ blocks:
           - checkout
           - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
 
+      # Build docker image with cache
+      # we're using $SEMAPHORE_WORKFLOW_ID to uniquely tag the image in all pipelines
       jobs:
         - name: Build
           commands:
-
-            # Build docker image with cache
-            # we're using $SEMAPHORE_WORKFLOW_ID to uniquely tag the image in all pipelines
             - docker pull $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:latest || true
             - docker build --cache-from $SEMAPHORE_REGISTRY_URL/seamphore-demo-cicd-kubernetes:latest -t $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID .
             - docker push $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
@@ -34,44 +33,48 @@ blocks:
         - name: NODE_ENV
           value: test
 
+      # We're going to run the tests *inside* the docker image, pull it from the registry
       prologue:
         commands:
-          # We're going to run the tests *inside* the docker image, pull it from the registry
           - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
           - docker pull $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
       jobs:
+        # Static code test. Run a javascript linter.
         - name: Static test
           commands:
-            # Run linter
             - docker run -it $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run lint
 
+        # The integration test uses a local postgres db.
         - name: Integration test
           commands:
             - sem-service start postgres
-            # Run integration test script
             - docker run --net=host -it $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run test
 
+        # The functional test uses a local postgres db.
         - name: Functional test
           commands:
             - sem-service start postgres
             # Run functional test script
             - docker run --net=host -it $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run ping
+            # Run db migration script
+            - docker run --net=host -it $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run migrate
 
+  # Push the current image to Semaphore private registry with the latest tag
+  # so it's available as cache for future builds.
   - name: Push as latest
     task:
       jobs:
         - name: Push
           commands:
-            # Push the current image to the private registry as latest
-            # so it's available as cache for future builds
             - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
             - docker pull $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
             - docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:latest
             - docker push $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:latest
 
-# Start canary deployment
-# uncomment the relavant promotion for your favorite cloud
+# Start canary deployment pipelines.
+# Canaries will automatically start when branch is master or the commit is tagged as hotfix*
+# Uncomment the relavant promotion for your favorite cloud.
 promotions:
   # - name: Canary Deployment
   #   pipeline_file: deploy-canary-gcp.yml

@@ -10,7 +10,7 @@ blocks:
 
   - name: Push to Registry
     task:
-      # Import DockerHub username and password secret
+      # Import DockerHub username and password secret.
       # For info on creating secrets, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
@@ -30,7 +30,7 @@ blocks:
   - name: Deploy to Kubernetes
     task:
       secrets:
-        # Import DO token, dockerhub and database credential secrets
+        # Import DO token, dockerhub and database credential secrets.
         # For info on creating secrets, see:
         # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: do-key
