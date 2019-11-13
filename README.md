@@ -39,7 +39,7 @@ $ sem init
 Cloud services required:
 
 - Kubernetes Cluster (recommended 3 nodes) called `semaphore-demo-cicd-kubernetes`
-- PostgreSQL Database
+- PostgreSQL Database in the same region and VPC as the cluster.
 
 Open the relevant pipeline files at `.semaphore` and fill in the environment variables for the blocks. 
 Uncomment the desired promotion on `.semaphore/semaphore.yml`.
@@ -74,6 +74,7 @@ $ sem create secret aws-key \
 
 #### Google Cloud
 
+- Create a project called `semaphore-demo-cicd-kubernetes`
 - Create service account and generate a key file. Upload the file to Semaphore:
 
 ```bash
@@ -82,6 +83,7 @@ $ sem create secret gcp-key -f YOUR_KEY_FILE.json:/home/semaphore/gcp-key.json
 
 #### DigitalOcean
 
+- Create a project called `semaphore-demo-cicd-kubernetes` and set it as default.
 - Get your authentication API Token and create a secret for it:
 
 ```bash
