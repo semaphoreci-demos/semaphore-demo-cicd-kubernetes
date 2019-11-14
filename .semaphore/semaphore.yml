@@ -76,15 +76,15 @@ blocks:
 # Canaries will automatically start when branch is master or the commit is tagged as hotfix*
 # Uncomment the relavant promotion for your favorite cloud.
 promotions:
-  - name: Canary Deployment (GCP)
-    pipeline_file: deploy-canary-gcp.yml
-    auto_promote:
-      when: "result = 'passed' and (branch = 'master' or tag =~ '^hotfix*')"
   - name: Canary Deployment (AWS)
     pipeline_file: deploy-canary-aws.yml
     auto_promote:
       when: "result = 'passed' and (branch = 'master' or tag =~ '^hotfix*')"
-  - name: Canary Deployment (DigitalOcean)
-    pipeline_file: deploy-canary-digitalocean.yml
-    auto_promote:
-      when: "result = 'passed' and (branch = 'master' or tag =~ '^hotfix*')"
+  # - name: Canary Deployment (GCP)
+  #   pipeline_file: deploy-canary-gcp.yml
+  #   auto_promote:
+  #     when: "result = 'passed' and (branch = 'master' or tag =~ '^hotfix*')"
+  # - name: Canary Deployment (DigitalOcean)
+  #   pipeline_file: deploy-canary-digitalocean.yml
+  #   auto_promote:
+  #     when: "result = 'passed' and (branch = 'master' or tag =~ '^hotfix*')"
