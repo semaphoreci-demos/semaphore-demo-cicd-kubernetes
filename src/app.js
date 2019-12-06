@@ -52,6 +52,15 @@ app.get("/all", function(req, res) {
         });
 });
 
+app.get("/ready", function(req, res) {
+    db.sequelize.authenticate().then(() => {
+        res.status(200).send(JSON.stringify({ 'ready': true }));
+    })
+    .catch( err => {
+        res.status(500).send(JSON.stringify({ 'ready': false, 'error': err }));
+    });
+});
+
 app.use(function(req, res) {
     res.status(404).send("404 - Not Found. Try the /all route");
 });
