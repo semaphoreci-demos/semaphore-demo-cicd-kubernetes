@@ -59,17 +59,22 @@ blocks:
         - name: gcp-key
         - name: db-params
 
-      # Define Google Cloud project name and zone.
-      # Set your zone, eg. us-centra1-c
-      # Set environment variables that your project requires.
+      # Define Google Cloud project ID, Kubernetes Cluster Name and Zone (eg. us-central1-c)
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: GCP_PROJECT_ID
-          value: semaphore-demo-cicd-kubernetes
+          value: semaphore
+        - name: GCP_PROJECT_DEFAULT_ZONE
+          value: us-central1-a
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
-        - name: GCP_PROJECT_DEFAULT_ZONE
-          value: YOUR_GCP_ZONE
+      # env_vars:
+      #   - name: GCP_PROJECT_ID
+      #     value: semaphore-demo-cicd-kubernetes
+      #   - name: CLUSTER_NAME
+      #     value: semaphore-demo-cicd-kubernetes
+      #   - name: GCP_PROJECT_DEFAULT_ZONE
+      #     value: YOUR_GCP_ZONE
 
       prologue:
         commands:
@@ -109,17 +114,22 @@ blocks:
       secrets:
         - name: gcp-key
 
-      # Define Google Cloud project name and zone.
-      # Set your zone, eg. us-centra1-c
-      # Set environment variables that your project requires.
+      # Define Google Cloud project ID, Kubernetes Cluster Name and Zone (eg. us-central1-c)
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
+        - name: GCP_PROJECT_ID
+          value: semaphore
+        - name: GCP_PROJECT_DEFAULT_ZONE
+          value: us-central1-a
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
-        - name: GCP_PROJECT_ID
-          value: semaphore-demo-cicd-kubernetes
-        - name: GCP_PROJECT_DEFAULT_ZONE
-          value: YOUR_GCP_ZONE
+      # env_vars:
+      #   - name: GCP_PROJECT_ID
+      #     value: semaphore-demo-cicd-kubernetes
+      #   - name: CLUSTER_NAME
+      #     value: semaphore-demo-cicd-kubernetes
+      #   - name: GCP_PROJECT_DEFAULT_ZONE
+      #     value: YOUR_GCP_ZONE
 
       prologue:
         commands:
