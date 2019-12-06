@@ -16,15 +16,15 @@ blocks:
         - name: gcp-key
         - name: db-params
 
-      # Define Google Cloud project name and zone.
-      # Set your zone, eg. us-centra1-c
-      # Set environment variables that your project requires.
+      # Define Google Cloud project ID, Kubernetes Cluster Name and Zone (eg. us-central1-c)
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: GCP_PROJECT_ID
           value: semaphore
         - name: GCP_PROJECT_DEFAULT_ZONE
           value: us-central1-a
+        - name: CLUSTER_NAME
+          value: semaphore-demo-cicd-kubernetes
       # env_vars:
       #   - name: CLUSTER_NAME
       #     value: semaphore-demo-cicd-kubernetes
