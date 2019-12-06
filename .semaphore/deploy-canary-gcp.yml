@@ -15,18 +15,9 @@ blocks:
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: GCP_PROJECT_ID
-          value: semaphore
-        - name: GCP_PROJECT_DEFAULT_ZONE
-          value: us-central1-a
-        - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
-      # env_vars:
-      #   - name: CLUSTER_NAME
-      #     value: semaphore-demo-cicd-kubernetes
-      #   - name: GCP_PROJECT_ID
-      #     value: semaphore-demo-cicd-kubernetes
-      #   - name: GCP_PROJECT_DEFAULT_ZONE
-      #     value: YOUR_GCP_ZONE
+        - name: GCP_PROJECT_DEFAULT_ZONE
+          value: YOUR_GCP_ZONE
 
       # Import secret with GCP access key file..
       # For info on creating secrets, see:
@@ -62,19 +53,13 @@ blocks:
       # Define Google Cloud project ID, Kubernetes Cluster Name and Zone (eg. us-central1-c)
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
+      env_vars:
         - name: GCP_PROJECT_ID
-          value: semaphore
-        - name: GCP_PROJECT_DEFAULT_ZONE
-          value: us-central1-a
+          value: semaphore-demo-cicd-kubernetes
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
-      # env_vars:
-      #   - name: GCP_PROJECT_ID
-      #     value: semaphore-demo-cicd-kubernetes
-      #   - name: CLUSTER_NAME
-      #     value: semaphore-demo-cicd-kubernetes
-      #   - name: GCP_PROJECT_DEFAULT_ZONE
-      #     value: YOUR_GCP_ZONE
+        - name: GCP_PROJECT_DEFAULT_ZONE
+          value: YOUR_GCP_ZONE
 
       prologue:
         commands:
@@ -118,18 +103,11 @@ blocks:
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: GCP_PROJECT_ID
-          value: semaphore
-        - name: GCP_PROJECT_DEFAULT_ZONE
-          value: us-central1-a
+          value: semaphore-demo-cicd-kubernetes
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
-      # env_vars:
-      #   - name: GCP_PROJECT_ID
-      #     value: semaphore-demo-cicd-kubernetes
-      #   - name: CLUSTER_NAME
-      #     value: semaphore-demo-cicd-kubernetes
-      #   - name: GCP_PROJECT_DEFAULT_ZONE
-      #     value: YOUR_GCP_ZONE
+        - name: GCP_PROJECT_DEFAULT_ZONE
+          value: YOUR_GCP_ZONE
 
       prologue:
         commands:
