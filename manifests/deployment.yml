@@ -21,6 +21,10 @@ spec:
       containers:
         - name: addressbook
           image: $img
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3000
           env:
             - name: NODE_ENV
               value: "production"
