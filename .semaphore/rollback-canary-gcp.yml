@@ -20,14 +20,13 @@ blocks:
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: CLUSTER_NAME
+          value: semaphore-demo-cicd-kubernetes
+        - name: GCP_PROJECT_ID
           value: semaphore
           # value: semaphore-demo-cicd-kubernetes
-        - name: GCP_PROJECT_ID
-          value: semaphore-demo-cicd-kubernetes
-        # - name: GCP_PROJECT_DEFAULT_ZONE
-        #   value: YOUR_GCP_ZONE
         - name: GCP_PROJECT_DEFAULT_ZONE
           value: us-central1-a
+        #   value: YOUR_GCP_ZONE
 
       prologue:
         commands:
@@ -51,7 +50,7 @@ blocks:
           - kubectl logs $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) || true
 
           # Scale up the stable deployment to normal size
-          - kubectl scale --replicas=3 deployment/addressbook-stable
+          - if kubectl get deployment addressbook-addressbook; then kubectl scale --replicas=3 deployment/addressbook-stable; fi
 
           # Remove the canary
           - if kubectl get deployment addressbook-canary; then kubectl delete deployment/addressbook-canary; fi
