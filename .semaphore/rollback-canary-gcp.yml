@@ -20,7 +20,8 @@ blocks:
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: CLUSTER_NAME
-          value: semaphore-demo-cicd-kubernetes
+          value: semaphore
+          # value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_ID
           value: semaphore-demo-cicd-kubernetes
         # - name: GCP_PROJECT_DEFAULT_ZONE

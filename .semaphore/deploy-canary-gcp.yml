@@ -12,13 +12,14 @@ blocks:
   - name: Push to Registry
     task:
       # Define Google Cloud project ID, Kubernetes Cluster Name and Zone (eg. us-central1-c)
-          # value: YOUR_GCP_ZONE
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: GCP_PROJECT_ID
-          value: semaphore-demo-cicd-kubernetes
+          value: semaphore
+          # value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_DEFAULT_ZONE
           value: us-central1-a
+          # value: YOUR_GCP_ZONE
 
       # Import secret with GCP access key file..
       # For info on creating secrets, see:
@@ -56,7 +57,8 @@ blocks:
           # value: YOUR_GCP_ZONE
       env_vars:
         - name: GCP_PROJECT_ID
-          value: semaphore-demo-cicd-kubernetes
+          # value: semaphore-demo-cicd-kubernetes
+          value: semaphore
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_DEFAULT_ZONE
@@ -105,7 +107,8 @@ blocks:
           # value: YOUR_GCP_ZONE
       env_vars:
         - name: GCP_PROJECT_ID
-          value: semaphore-demo-cicd-kubernetes
+          value: semaphore
+          # value: semaphore-demo-cicd-kubernetes
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_DEFAULT_ZONE
