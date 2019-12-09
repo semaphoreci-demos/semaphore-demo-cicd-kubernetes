@@ -17,7 +17,8 @@ blocks:
         - name: GCP_PROJECT_ID
           value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_DEFAULT_ZONE
-          value: YOUR_GCP_ZONE
+          # value: YOUR_GCP_ZONE
+          value: us-central1-a
 
       # Import secret with GCP access key file..
       # For info on creating secrets, see:
@@ -59,7 +60,8 @@ blocks:
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_DEFAULT_ZONE
-          value: YOUR_GCP_ZONE
+          # value: YOUR_GCP_ZONE
+          value: us-central1-a
 
       prologue:
         commands:
@@ -107,7 +109,8 @@ blocks:
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_DEFAULT_ZONE
-          value: YOUR_GCP_ZONE
+          # value: YOUR_GCP_ZONE
+          value: us-central1-a
 
       prologue:
         commands:
