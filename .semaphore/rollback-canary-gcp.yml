@@ -14,7 +14,6 @@ blocks:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
         - name: gcp-key
-        - name: db-params
 
       # Define Google Cloud project ID, Kubernetes Cluster Name and Zone (eg. us-central1-c)
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
@@ -46,11 +45,11 @@ blocks:
           # Capture information for debugging purposes
           - kubectl get all -o wide
           - kubectl get events
-          - kubectl describe deployment addressbook-canary
+          - kubectl describe deployment addressbook-canary || true
           - kubectl logs $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) || true
 
           # Scale up the stable deployment to normal size
-          - if kubectl get deployment addressbook-addressbook; then kubectl scale --replicas=3 deployment/addressbook-stable; fi
+          - if kubectl get deployment addressbook-stable; then kubectl scale --replicas=3 deployment/addressbook-stable; fi
 
           # Remove the canary
           - if kubectl get deployment addressbook-canary; then kubectl delete deployment/addressbook-canary; fi
