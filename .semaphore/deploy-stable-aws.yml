@@ -11,14 +11,13 @@ blocks:
   - name: Stable deployment
     task:
       secrets:
-        # Import secret containing AWS token and kubeconfig.
-        # Import database username and password secret.
+        # Import secret containing AWS token and kubeconfig
+        # and the database username and password secret.
         # For info on creating secrets, see:
         # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: aws-key
-        # Import the AWS access key environment variables
         - name: db-params
-        # - name: AWS
+
       # Define environment variables for the jobs on this block.
       # For info on environment variables, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets

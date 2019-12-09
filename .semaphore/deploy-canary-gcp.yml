@@ -53,7 +53,6 @@ blocks:
       # Define Google Cloud project ID, Kubernetes Cluster Name and Zone (eg. us-central1-c)
       # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
-      env_vars:
         - name: GCP_PROJECT_ID
           value: semaphore-demo-cicd-kubernetes
         - name: CLUSTER_NAME
@@ -130,6 +129,14 @@ blocks:
           # Run migrations script
           - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run migrate
 
+# If the functional tests pass, stop and wait for a manual promotion.
+# On error automatically start the rollback pipeline.
+# For more on such options, see:
+# https://docs.semaphoreci.com/article/50-pipeline-yaml#promotions
 promotions:
   - name: Stable Deployment
     pipeline_file: deploy-stable-gcp.yml
+  - name: Rollback Canary
+    pipeline_file: rollback-canary-gcp.yml
+    auto_promote:
+      when: "result = 'failed'"
