@@ -22,11 +22,9 @@ blocks:
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_ID
-          value: semaphore
-          # value: semaphore-demo-cicd-kubernetes
+          value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_DEFAULT_ZONE
-          # value: YOUR_GCP_ZONE
-          value: us-central1-a
+          value: YOUR_GCP_ZONE
 
       prologue:
         commands:

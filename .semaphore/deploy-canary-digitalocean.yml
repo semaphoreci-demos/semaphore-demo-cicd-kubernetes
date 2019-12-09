@@ -77,7 +77,6 @@ blocks:
         # For info on creating secrets, see:
         # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: do-key
-        - name: db-params
 
       # Define environment variables for the jobs on this block.
       # For info on environment variables, see:

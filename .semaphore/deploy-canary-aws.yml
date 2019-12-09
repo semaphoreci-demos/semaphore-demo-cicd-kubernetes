@@ -43,10 +43,10 @@ blocks:
             - docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID $ECR_REGISTRY/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
             - docker push $ECR_REGISTRY/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
 
-  - name: Deploy
+  - name: Canary Deployment
     task:
-      # Import secret containing AWS token and kubeconfig.
-      # Import database username and password secret.
+      # Import secret containing AWS token and kubeconfig 
+      # and the database username and password secret.
       # For info on creating secrets, see:
       # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
@@ -105,11 +105,9 @@ blocks:
     task:
       secrets:
         # Import secret containing AWS token and kubeconfig
-        # Import database username and password secret
         # For info on creating secrets, see:
         # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: aws-key
-        - name: db-params
 
       # Define environment variables for the jobs on this block.
       # For info on environment variables, see:
