@@ -8,8 +8,14 @@ const sequelize = new Sequelize(process.env.DB_SCHEMA || 'postgres',
                                     dialect: 'postgres',
                                     dialectOptions: {
                                         ssl: process.env.DB_SSL == "true"
+                                    },
+                                    pool: {
+                                        min: 0,
+                                        max: 5,
+                                        idle: 30000
                                     }
-                                });
+                                }
+);
 const Person = sequelize.define('Person', {
     firstName: {
         type: Sequelize.STRING,
