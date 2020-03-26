@@ -1,15 +1,27 @@
+# this setup is for development purposes only
+
 version: '3.7'
 services:
   web:
     build: .
     ports:
       - "3000:3000"
-    links:
-      - db
+    depends_on:
+      - migrate
     environment:
       DB_HOST: db
 
+  migrate:
+    build: .
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+    command: sh -c 'sh src/wait-port db 5432 && node src/migrate.js'
+
   db:
-    image: postgres
+    image: postgres:12
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "trust"

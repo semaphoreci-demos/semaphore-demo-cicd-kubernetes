@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+# block until port is open
+
+DB=$1
+PORT=$2
+while ! nc -z "$DB" "$PORT"; do   
+  sleep 0.1 # wait for 1/10 of the second before check again
+done
