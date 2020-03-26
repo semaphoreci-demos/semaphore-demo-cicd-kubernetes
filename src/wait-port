@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+# block until port is open
+
+set -e
+
+DB=$1
+PORT=$2
+while ! nc -z "$DB" "$PORT"; do   
+  sleep 0.1
+done
