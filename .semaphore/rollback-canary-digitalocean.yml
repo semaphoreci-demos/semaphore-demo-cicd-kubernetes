@@ -25,10 +25,6 @@ blocks:
 
       prologue:
         commands:
-          # Install DO cli
-          - wget https://github.com/digitalocean/doctl/releases/download/v1.20.0/doctl-1.20.0-linux-amd64.tar.gz
-          - tar xf doctl-1.20.0-linux-amd64.tar.gz 
-          - sudo cp doctl /usr/local/bin
           - doctl auth init --access-token $DO_ACCESS_TOKEN
           - doctl kubernetes cluster kubeconfig save "${CLUSTER_NAME}"
           - checkout
