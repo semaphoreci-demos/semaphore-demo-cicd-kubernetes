@@ -18,27 +18,29 @@ spec:
         app: addressbook
         deployment: $deployment
     spec:
+      imagePullSecrets:
+      - name: dockerhub
       containers:
-        - name: addressbook
-          image: $img
-          readinessProbe:
-            httpGet:
-              path: /ready
-              port: 3000
-          env:
-            - name: NODE_ENV
-              value: "production"
-            - name: PORT
-              value: "$PORT"
-            - name: DB_SCHEMA
-              value: "$DB_SCHEMA"
-            - name: DB_USER
-              value: "$DB_USER"
-            - name: DB_PASSWORD
-              value: "$DB_PASSWORD"
-            - name: DB_HOST
-              value: "$DB_HOST"
-            - name: DB_PORT
-              value: "$DB_PORT"
-            - name: DB_SSL
-              value: "$DB_SSL"
+      - name: addressbook
+        image: $img
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "$PORT"
+        - name: DB_SCHEMA
+          value: "$DB_SCHEMA"
+        - name: DB_USER
+          value: "$DB_USER"
+        - name: DB_PASSWORD
+          value: "$DB_PASSWORD"
+        - name: DB_HOST
+          value: "$DB_HOST"
+        - name: DB_PORT
+          value: "$DB_PORT"
+        - name: DB_SSL
+          value: "$DB_SSL"
