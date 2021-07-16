@@ -1,5 +1,3 @@
-# Deploy Stable version to AWS
-
 version: v1.0
 name: Deploy (AWS)
 agent:
@@ -7,56 +5,31 @@ agent:
     type: e1-standard-2
     os_image: ubuntu1804
 blocks:
-
   - name: Stable deployment
     task:
       secrets:
-        # Import secret containing AWS token and kubeconfig
-        # and the database username and password secret.
-        # For info on creating secrets, see:
-        # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: aws-key
         - name: db-params
-
-      # Define environment variables for the jobs on this block.
-      # For info on environment variables, see:
-      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
-        # Adjust with your AWS Region, eg. us-east-2
         - name: AWS_DEFAULT_REGION
           value: YOUR_AWS_REGION
-        # Replace value with your ECR URL, eg.  521701321156.dkr.ecr.us-east-2.amazonaws.com
         - name: ECR_REGISTRY
           value: YOUR_ECR_REGISTRY
-        # The KUBECONFIG file must match the path on the aws-key secret.
         - name: KUBECONFIG
           value: /home/semaphore/aws-key.yml
-
       jobs:
         - name: Deploy
           commands:
             - checkout
-
-            # Kubectl needs aws-iam-authenticator in PATH:
             - mkdir -p ~/bin
-            - curl -o ~/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.12.7/2019-03-27/bin/linux/amd64/aws-iam-authenticator
+            - 'curl -o ~/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.12.7/2019-03-27/bin/linux/amd64/aws-iam-authenticator'
             - chmod a+x ~/bin/aws-iam-authenticator
-            - export PATH=~/bin:$PATH
+            - 'export PATH=~/bin:$PATH'
             - kubectl get pods
-
-            # Kubernetes needs to authenticate with ECR to pull the container image,
-            # rhe auth token only lasts a few hours. So we create a new one each time.
             - sudo pip install awscli
-            - export ECR_PASSWORD=$(aws ecr get-login --no-include-email | awk '{print $6}')
+            - 'export ECR_PASSWORD=$(aws ecr get-login --no-include-email | awk ''{print $6}'')'
             - kubectl delete secret aws-ecr || true
-            - kubectl create secret docker-registry aws-ecr --docker-server=https://$ECR_REGISTRY/semaphore-demo-cicd-kubernetes --docker-username=AWS --docker-password=$ECR_PASSWORD
+            - 'kubectl create secret docker-registry aws-ecr --docker-server=https://$ECR_REGISTRY/semaphore-demo-cicd-kubernetes --docker-username=AWS --docker-password=$ECR_PASSWORD'
             - kubectl get secret aws-ecr
-
-            # The following script creates a stable deployment with 3 replicas
-            # We deploy the same docker image created in the docker build block
-            # which was tagged with $SEMAPHORE_WORKFLOW_ID
-            - ./apply.sh manifests/deployment-aws.yml addressbook-stable 3 $ECR_REGISTRY/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-
-            # Since the canary deployment was a success, we no longer need it, 
-            # we delete it if it still exists
+            - './apply.sh manifests/deployment-aws.yml addressbook-stable 3 $ECR_REGISTRY/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID'
             - if kubectl get deployment addressbook-canary; then kubectl delete deployment/addressbook-canary; fi

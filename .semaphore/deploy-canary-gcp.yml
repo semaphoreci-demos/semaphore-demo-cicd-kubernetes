@@ -1,57 +1,35 @@
-# Canary deployment to Google Cloud
-
 version: v1.0
 name: Canary Deployment (Google Cloud)
 agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu1804
-
 blocks:
-
   - name: Push to Registry
     task:
-      # Define Google Cloud project ID, Kubernetes Cluster Name and Zone (eg. us-central1-c)
-      # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: GCP_PROJECT_ID
           value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_DEFAULT_ZONE
           value: YOUR_GCP_ZONE
-
-      # Import secret with GCP access key file..
-      # For info on creating secrets, see:
-      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
         - name: gcp-key
       jobs:
-      - name: Push
-        commands:
-          # Pull image from Semaphore private registry
-          - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
-          - docker pull $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-
-          # Login to Google private registry using the json key in the gcp-key secret
-          - gcloud auth activate-service-account --key-file=gcp-key.json
-          - gcloud auth configure-docker -q
-          - gcloud config set project $GCP_PROJECT_ID
-          - gcloud config set compute/zone $GCP_PROJECT_DEFAULT_ZONE
-
-          # Upload image to cloud registry
-          - docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-          - docker push gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-
+        - name: Push
+          commands:
+            - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
+            - 'docker pull $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID'
+            - gcloud auth activate-service-account --key-file=gcp-key.json
+            - gcloud auth configure-docker -q
+            - gcloud config set project $GCP_PROJECT_ID
+            - gcloud config set compute/zone $GCP_PROJECT_DEFAULT_ZONE
+            - 'docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID'
+            - 'docker push gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID'
   - name: Canary Deployment
     task:
-      # Import secret with GCP access key file..
-      # For info on creating secrets, see:
-      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
         - name: gcp-key
         - name: db-params
-
-      # Define Google Cloud project ID, Kubernetes Cluster Name and Zone (eg. us-central1-c)
-      # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: GCP_PROJECT_ID
           value: semaphore-demo-cicd-kubernetes
@@ -59,47 +37,26 @@ blocks:
           value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_DEFAULT_ZONE
           value: YOUR_GCP_ZONE
-
       prologue:
         commands:
-          # Authenticate using the file injected from the secret
           - gcloud auth activate-service-account --key-file=gcp-key.json
           - gcloud auth configure-docker -q
           - gcloud config set project $GCP_PROJECT_ID
           - gcloud config set compute/zone $GCP_PROJECT_DEFAULT_ZONE
-
-          # Get kubectl config file
           - gcloud container clusters get-credentials $CLUSTER_NAME --zone $GCP_PROJECT_DEFAULT_ZONE --project $GCP_PROJECT_ID
           - checkout
-
       jobs:
-      - name: Deploy
-        commands:
-          - kubectl get nodes
-          - kubectl get pods
-
-          # Create the load balancer service
-          - kubectl apply -f manifests/service.yml
-
-          # The following script creates a canary deployment with 1 replica
-          # We deploy the same docker image created in the docker build block
-          # which was tagged with $SEMAPHORE_WORKFLOW_ID
-          - ./apply.sh manifests/deployment.yml addressbook-canary 1 "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
-
-          # Since we added an additional canary pod, if we had a stable deployment
-          # we might want to scale it back to 2 replicas to keep 3 replicas total.
-          - if kubectl get deployment addressbook-stable; then kubectl scale --replicas=2 deployment/addressbook-stable; fi
-        
+        - name: Deploy
+          commands:
+            - kubectl get nodes
+            - kubectl get pods
+            - kubectl apply -f manifests/service.yml
+            - './apply.sh manifests/deployment.yml addressbook-canary 1 "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"'
+            - if kubectl get deployment addressbook-stable; then kubectl scale --replicas=2 deployment/addressbook-stable; fi
   - name: Functional test and migration
     task:
-      # Import secret with GCP access key file..
-      # For info on creating secrets, see:
-      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
         - name: gcp-key
-
-      # Define Google Cloud project ID, Kubernetes Cluster Name and Zone (eg. us-central1-c)
-      # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: GCP_PROJECT_ID
           value: semaphore-demo-cicd-kubernetes
@@ -107,36 +64,22 @@ blocks:
           value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_DEFAULT_ZONE
           value: YOUR_GCP_ZONE
-
       prologue:
         commands:
-          # Authenticate using the file injected from the secret
           - gcloud auth activate-service-account --key-file=gcp-key.json
-
-          # Don't forget -q to silence confirmation prompts
           - gcloud auth configure-docker -q
           - gcloud config set project $GCP_PROJECT_ID
           - gcloud config set compute/zone $GCP_PROJECT_DEFAULT_ZONE
-
-          # Get kubectl config file
           - gcloud container clusters get-credentials $CLUSTER_NAME --zone $GCP_PROJECT_DEFAULT_ZONE --project $GCP_PROJECT_ID
       jobs:
-
-      - name: Test and migrate db
-        commands:
-          # Run test script in the pod
-          - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run ping
-          # Run migrations script
-          - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run migrate
-
-# If the functional tests pass, stop and wait for a manual promotion.
-# On error automatically start the rollback pipeline.
-# For more on such options, see:
-# https://docs.semaphoreci.com/article/50-pipeline-yaml#promotions
+        - name: Test and migrate db
+          commands:
+            - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run ping
+            - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run migrate
 promotions:
   - name: Stable Deployment
     pipeline_file: deploy-stable-gcp.yml
   - name: Rollback Canary
     pipeline_file: rollback-canary-gcp.yml
     auto_promote:
-      when: "result = 'failed'"
+      when: result = 'failed'

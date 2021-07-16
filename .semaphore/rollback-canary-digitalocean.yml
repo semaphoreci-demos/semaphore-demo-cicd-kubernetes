@@ -1,45 +1,28 @@
-# Rollback Canary on DigitalOcean
-
 version: v1.0
 name: Deploy Stable (DigitalOcean)
 agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu1804
-
 blocks:
   - name: Rollback Canary
     task:
-      # Import DigitalOcean Token
-      # For info on creating secrets, see:
-      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
         - name: do-key
-
-      # Define environment variables for the jobs on this block.
-      # For info on environment variables, see:
-      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
-
       prologue:
         commands:
           - doctl auth init --access-token $DO_ACCESS_TOKEN
-          - doctl kubernetes cluster kubeconfig save "${CLUSTER_NAME}"
+          - 'doctl kubernetes cluster kubeconfig save "${CLUSTER_NAME}"'
           - checkout
-
       jobs:
-      - name: Rollback
-        commands:
-          # Capture information for debugging purposes
-          - kubectl get all -o wide
-          - kubectl get events
-          - kubectl describe deployment addressbook-canary || true
-          - kubectl logs $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) || true
-
-          # Scale up the stable deployment to normal size
-          - if kubectl get deployment addressbook-stable; then kubectl scale --replicas=3 deployment/addressbook-stable; fi
-
-          # Remove the canary
-          - if kubectl get deployment addressbook-canary; then kubectl delete deployment/addressbook-canary; fi
+        - name: Rollback
+          commands:
+            - kubectl get all -o wide
+            - kubectl get events
+            - kubectl describe deployment addressbook-canary || true
+            - kubectl logs $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) || true
+            - if kubectl get deployment addressbook-stable; then kubectl scale --replicas=3 deployment/addressbook-stable; fi
+            - if kubectl get deployment addressbook-canary; then kubectl delete deployment/addressbook-canary; fi

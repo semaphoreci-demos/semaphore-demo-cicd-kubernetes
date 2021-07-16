@@ -1,5 +1,3 @@
-# Deploy Canary version to DigitalOcean
-
 version: v1.0
 name: Deploy (DigitalOcean)
 agent:
@@ -7,101 +5,58 @@ agent:
     type: e1-standard-2
     os_image: ubuntu1804
 blocks:
-
   - name: Push to Registry
     task:
-      # Import DockerHub username and password secret.
-      # For info on creating secrets, see:
-      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
         - name: dockerhub
       jobs:
         - name: Push
           commands:
-              # Pull from private registry
-              - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
-              - docker pull $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-
-              # Push to DockerHub
-              - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-              - docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-              - docker push $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-
+            - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
+            - 'docker pull $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID'
+            - 'echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin'
+            - 'docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID'
+            - 'docker push $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID'
   - name: Deploy
     task:
       secrets:
-        # Import DO token, dockerhub and database credential secrets.
-        # For info on creating secrets, see:
-        # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: do-key
         - name: db-params
         - name: dockerhub
-
-      # Define environment variables for the jobs on this block.
-      # For info on environment variables, see:
-      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
-
       prologue:
         commands:
           - doctl auth init --access-token $DO_ACCESS_TOKEN
-          - doctl kubernetes cluster kubeconfig save "${CLUSTER_NAME}"
+          - 'doctl kubernetes cluster kubeconfig save "${CLUSTER_NAME}"'
           - checkout
-
       jobs:
         - name: Deploy
           commands:
-            # Create the load balancer service
             - kubectl apply -f manifests/service.yml
-
-            # The following script creates a canary deployment with 1 replica
-            # We deploy the same docker image created in the docker build block
-            # which was tagged with $SEMAPHORE_WORKFLOW_ID
-            - ./apply.sh manifests/deployment.yml addressbook-canary 1 $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-
-            # Since we added an additional canary pod, if we had a stable deployment
-            # we might want to scale it back to 2 replicas to keep 3 replicas total.
+            - './apply.sh manifests/deployment.yml addressbook-canary 1 $DOCKER_USERNAME/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID'
             - if kubectl get deployment addressbook-stable; then kubectl scale --replicas=2 deployment/addressbook-stable; fi
-
-
   - name: Functional test and migration
     task:
       secrets:
-        # Import DO token and database credential secrets
-        # For info on creating secrets, see:
-        # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: do-key
-
-      # Define environment variables for the jobs on this block.
-      # For info on environment variables, see:
-      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
-
       prologue:
         commands:
           - doctl auth init --access-token $DO_ACCESS_TOKEN
-          - doctl kubernetes cluster kubeconfig save "${CLUSTER_NAME}"
-
+          - 'doctl kubernetes cluster kubeconfig save "${CLUSTER_NAME}"'
       jobs:
         - name: Test and migrate db
           commands:
-            # Run test script in the pod
             - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run ping
-            # Run migrations script
             - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run migrate
-
-# If the functional tests pass, stop and wait for a manual promotion.
-# On error automatically start the rollback pipeline.
-# For more on such options, see:
-# https://docs.semaphoreci.com/article/50-pipeline-yaml#promotions
 promotions:
   - name: Stable Deployment
     pipeline_file: deploy-stable-digitalocean.yml
   - name: Rollback Canary
     pipeline_file: rollback-canary-digitalocean.yml
     auto_promote:
-      when: "result = 'failed'"
+      when: result = 'failed'

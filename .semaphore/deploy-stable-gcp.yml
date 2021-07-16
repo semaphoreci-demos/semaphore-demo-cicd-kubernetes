@@ -4,20 +4,12 @@ agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu1804
-
 blocks:
-
   - name: Stable Deployment
     task:
-      # Import secret with GCP access key file..
-      # For info on creating secrets, see:
-      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
         - name: gcp-key
         - name: db-params
-
-      # Define Google Cloud project ID, Kubernetes Cluster Name and Zone (eg. us-central1-c)
-      # See https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
         - name: CLUSTER_NAME
           value: semaphore-demo-cicd-kubernetes
@@ -25,30 +17,18 @@ blocks:
           value: semaphore-demo-cicd-kubernetes
         - name: GCP_PROJECT_DEFAULT_ZONE
           value: YOUR_GCP_ZONE
-
       prologue:
         commands:
-          # Authenticate using the file injected from the secret
           - gcloud auth activate-service-account --key-file=gcp-key.json
           - gcloud auth configure-docker -q
           - gcloud config set project $GCP_PROJECT_ID
           - gcloud config set compute/zone $GCP_PROJECT_DEFAULT_ZONE
-
-          # Get kubectl config file
           - gcloud container clusters get-credentials $CLUSTER_NAME --zone $GCP_PROJECT_DEFAULT_ZONE --project $GCP_PROJECT_ID
           - checkout
-
       jobs:
-      - name: Deploy
-        commands:
-          - kubectl get nodes
-          - kubectl get pods
-
-          # The following script creates a stable deployment with 3 replicas
-          # We deploy the same docker image created in the docker build block
-          # which was tagged with $SEMAPHORE_WORKFLOW_ID
-          - ./apply.sh manifests/deployment.yml addressbook-stable 3 "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"
-
-          # Since the canary deployment was a success, we no longer need it, 
-          # we delete it if it still exists
-          - if kubectl get deployment addressbook-canary; then kubectl delete deployment/addressbook-canary; fi
+        - name: Deploy
+          commands:
+            - kubectl get nodes
+            - kubectl get pods
+            - './apply.sh manifests/deployment.yml addressbook-stable 3 "gcr.io/$GCP_PROJECT_ID/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID"'
+            - if kubectl get deployment addressbook-canary; then kubectl delete deployment/addressbook-canary; fi

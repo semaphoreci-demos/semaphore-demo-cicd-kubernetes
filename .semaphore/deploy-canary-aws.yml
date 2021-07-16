@@ -1,5 +1,3 @@
-# Deploy Canary version to AWS
-
 version: v1.0
 name: Deploy to Kubernetes (AWS)
 agent:
@@ -7,144 +5,82 @@ agent:
     type: e1-standard-2
     os_image: ubuntu1804
 blocks:
-
   - name: Push to Registry
     task:
-      # Import secret containing AWS token and kubeconfig
-      # For info on creating secrets, see:
-      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
         - name: aws-key
-
-      # Define environment variables for the jobs on this block.
-      # For info on environment variables, see:
-      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
-        # Adjust with your AWS Region, eg. us-east-2
         - name: AWS_DEFAULT_REGION
           value: YOUR_AWS_REGION
-        # Replace value with your ECR URL, eg.  521701321156.dkr.ecr.us-east-2.amazonaws.com
         - name: ECR_REGISTRY
           value: YOUR_ECR_REGISTRY
-
       jobs:
-      - name: Push
-        commands:
-            # Pull image from private registry
+        - name: Push
+          commands:
             - docker login -u $SEMAPHORE_REGISTRY_USERNAME -p $SEMAPHORE_REGISTRY_PASSWORD $SEMAPHORE_REGISTRY_URL
-            - docker pull $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-
-            # Install the most up-to-date AWS cli and login to ECR
+            - 'docker pull $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID'
             - sudo pip install awscli
             - aws ecr get-login --no-include-email | bash
             - docker images
-
-            # Push a new image to ECR
-            - docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID $ECR_REGISTRY/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-            - docker push $ECR_REGISTRY/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-
+            - 'docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID $ECR_REGISTRY/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID'
+            - 'docker push $ECR_REGISTRY/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID'
   - name: Canary Deployment
     task:
-      # Import secret containing AWS token and kubeconfig 
-      # and the database username and password secret.
-      # For info on creating secrets, see:
-      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       secrets:
         - name: aws-key
         - name: db-params
-
-      # Define environment variables for the jobs on this block.
-      # For info on environment variables, see:
-      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
-        # Adjust with your AWS Region, eg. us-east-2
         - name: AWS_DEFAULT_REGION
           value: YOUR_AWS_REGION
-        # Replace value with your ECR URL, eg.  521701321156.dkr.ecr.us-east-2.amazonaws.com
         - name: ECR_REGISTRY
           value: YOUR_ECR_REGISTRY
-        # The KUBECONFIG file must match the path on the aws-key secret.
         - name: KUBECONFIG
           value: /home/semaphore/aws-key.yml
-
       prologue:
         commands:
           - checkout
-
-          # Kubectl needs aws-iam-authenticator in PATH to work with AWS
           - mkdir -p ~/bin
-          - curl -o ~/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.12.7/2019-03-27/bin/linux/amd64/aws-iam-authenticator
+          - 'curl -o ~/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.12.7/2019-03-27/bin/linux/amd64/aws-iam-authenticator'
           - chmod a+x ~/bin/aws-iam-authenticator
-          - export PATH=~/bin:$PATH
+          - 'export PATH=~/bin:$PATH'
           - kubectl get pods
-
-          # Kubernetes needs to authenticate with ECR to pull the container image,
-          # the auth token only lasts a few hours. So we create a new one each time.
           - sudo pip install awscli
-          - export ECR_PASSWORD=$(aws ecr get-login --no-include-email | awk '{print $6}')
+          - 'export ECR_PASSWORD=$(aws ecr get-login --no-include-email | awk ''{print $6}'')'
           - kubectl delete secret aws-ecr || true
-          - kubectl create secret docker-registry aws-ecr --docker-server=https://$ECR_REGISTRY/semaphore-demo-cicd-kubernetes --docker-username=AWS --docker-password=$ECR_PASSWORD
+          - 'kubectl create secret docker-registry aws-ecr --docker-server=https://$ECR_REGISTRY/semaphore-demo-cicd-kubernetes --docker-username=AWS --docker-password=$ECR_PASSWORD'
           - kubectl get secret aws-ecr
-
       jobs:
         - name: Deploy
           commands:
-            # Create the load balancer service
             - kubectl apply -f manifests/service.yml
-
-            # The following script creates a canary deployment with 1 replica
-            # We deploy the same docker image created in the docker build block
-            # which was tagged with $SEMAPHORE_WORKFLOW_ID
-            - ./apply.sh manifests/deployment-aws.yml addressbook-canary 1 $ECR_REGISTRY/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID
-
-            # Since we added an additional canary pod, if we had a stable deployment
-            # we might want to scale it back to 2 replicas to keep 3 replicas total.
+            - './apply.sh manifests/deployment-aws.yml addressbook-canary 1 $ECR_REGISTRY/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID'
             - if kubectl get deployment addressbook-stable; then kubectl scale --replicas=2 deployment/addressbook-stable; fi
-
   - name: Functional test and migration
     task:
       secrets:
-        # Import secret containing AWS token and kubeconfig
-        # For info on creating secrets, see:
-        # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
         - name: aws-key
-
-      # Define environment variables for the jobs on this block.
-      # For info on environment variables, see:
-      # https://docs.semaphoreci.com/article/66-environment-variables-and-secrets
       env_vars:
-        # Adjust with your AWS Region, eg. us-east-2
         - name: AWS_DEFAULT_REGION
           value: YOUR_AWS_REGION
         - name: KUBECONFIG
           value: /home/semaphore/aws-key.yml
-
       prologue:
         commands:
-          # Kubectl needs aws-iam-authenticator in PATH to work with AWS
           - mkdir -p ~/bin
-          - curl -o ~/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.12.7/2019-03-27/bin/linux/amd64/aws-iam-authenticator
+          - 'curl -o ~/bin/aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.12.7/2019-03-27/bin/linux/amd64/aws-iam-authenticator'
           - chmod a+x ~/bin/aws-iam-authenticator
-          - export PATH=~/bin:$PATH
+          - 'export PATH=~/bin:$PATH'
           - sudo pip install awscli
           - kubectl get deployments
-
       jobs:
         - name: Test and migrate db
           commands:
-            # Run test script in the pod
             - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run ping
-            # Run migrations script
             - kubectl exec -it $(kubectl get pod -l deployment=addressbook-canary -o name | head -n 1) -- npm run migrate
-
-# If the functional tests pass, stop and wait for a manual promotion.
-# On error automatically start the rollback pipeline.
-# For more on such options, see:
-# https://docs.semaphoreci.com/article/50-pipeline-yaml#promotions
 promotions:
   - name: Stable Deployment
     pipeline_file: deploy-stable-aws.yml
   - name: Rollback Canary
     pipeline_file: rollback-canary-aws.yml
     auto_promote:
-      when: "result = 'failed'"
+      when: result = 'failed'
