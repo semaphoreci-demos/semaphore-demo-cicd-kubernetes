@@ -41,6 +41,8 @@ blocks:
             - sem-service start postgres
             - 'docker run --net=host -it $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run ping'
             - 'docker run --net=host -it $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID npm run migrate'
+      secrets:
+        - name: registry
   - name: Push as latest
     task:
       jobs:
@@ -50,6 +52,8 @@ blocks:
             - 'docker pull $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID'
             - 'docker tag $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:$SEMAPHORE_WORKFLOW_ID $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:latest'
             - 'docker push $SEMAPHORE_REGISTRY_URL/semaphore-demo-cicd-kubernetes:latest'
+      secrets:
+        - name: registry
 promotions:
   - name: Canary Deployment (DigitalOcean)
     pipeline_file: deploy-canary-digitalocean.yml
