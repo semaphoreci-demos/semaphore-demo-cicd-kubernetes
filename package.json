@@ -20,10 +20,10 @@
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "pg": "^7.18.2",
-    "sequelize": "^5.21.5"
+    "sequelize": "^5.22.4"
   },
   "devDependencies": {
-    "jest": "^24.9.0",
-    "jshint": "^2.11.0"
+    "jest": "^27.0.6",
+    "jshint": "^2.13.0"
   }
 }
