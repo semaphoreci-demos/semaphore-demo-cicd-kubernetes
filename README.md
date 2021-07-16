@@ -41,7 +41,7 @@ Cloud services required:
 - Kubernetes Cluster (recommended 3 nodes) called `semaphore-demo-cicd-kubernetes`
 - PostgreSQL Database in the same region and VPC as the cluster.
 
-Open the relevant pipeline files at `.semaphore` and fill in the environment variables for the blocks. 
+Open the relevant pipeline files at `.semaphore` and fill in the environment variables for the blocks.
 Uncomment the desired promotion on `.semaphore/semaphore.yml`.
 
 ### Create Secrets
@@ -102,6 +102,6 @@ $ sem create secret dockerhub \
 
 ## License
 
-Copyright (c) 2019 Rendered Text
+Copyright (c) 2021 Rendered Text
 
 Distributed under the MIT License. See the file [LICENSE.md](./LICENSE.md).
